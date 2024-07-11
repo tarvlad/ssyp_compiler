@@ -1,6 +1,4 @@
-package org.ssyp.y2024.vm;
-
-public class VM {
+public class Main {
     public static void main(String[] args) {
         
     }

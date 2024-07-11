@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Lexer {
-    public static Token[] tokenize(String input) {
+    public static List<Token> tokenize(String input) {
         List<Token> tokens = new ArrayList<Token>();
         String[] splitByLinebreak = input.split("\n");
         List<String> splitByLinebreakAndSpace = new ArrayList<String>();
@@ -14,20 +14,21 @@ public class Lexer {
         }
         List<String> splitByFunctions = new ArrayList<String>();
         for (String elsOfSplitByLinebreakAndSpase : splitByLinebreakAndSpace) {
-            if ((elsOfSplitByLinebreakAndSpase.toCharArray()[0] == '#' || elsOfSplitByLinebreakAndSpase.toCharArray()[0] == '@') && elsOfSplitByLinebreakAndSpase.toCharArray()[elsOfSplitByLinebreakAndSpase.toCharArray().length - 1] == ';') {
+            char[] toCharElsOfSplitEnd = elsOfSplitByLinebreakAndSpase.toCharArray();
+            if ((toCharElsOfSplitEnd[0] == '#' || toCharElsOfSplitEnd[0] == '@') && toCharElsOfSplitEnd[toCharElsOfSplitEnd.length - 1] == ';') {
                 tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, elsOfSplitByLinebreakAndSpase.toCharArray().length - 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(elsOfSplitByLinebreakAndSpase.toCharArray().length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
-            } else if (elsOfSplitByLinebreakAndSpase.toCharArray()[0] == '#' || elsOfSplitByLinebreakAndSpase.toCharArray()[0] == '@') {
+                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, toCharElsOfSplitEnd.length - 1)));
+                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(toCharElsOfSplitEnd.length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
+            } else if (toCharElsOfSplitEnd[0] == '#' || toCharElsOfSplitEnd[0] == '@') {
                 tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
-            } else if (elsOfSplitByLinebreakAndSpase.toCharArray()[elsOfSplitByLinebreakAndSpase.toCharArray().length - 1] == ';') {
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, elsOfSplitByLinebreakAndSpase.toCharArray().length - 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(elsOfSplitByLinebreakAndSpase.toCharArray().length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
+                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, toCharElsOfSplitEnd.length)));
+            } else if (toCharElsOfSplitEnd[elsOfSplitByLinebreakAndSpase.toCharArray().length - 1] == ';') {
+                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, toCharElsOfSplitEnd.length - 1)));
+                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(toCharElsOfSplitEnd.length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
             } else {
                 tokens.add(new Token(elsOfSplitByLinebreakAndSpase));
             }
         }
-        return null;
+        return tokens;
     }
 }

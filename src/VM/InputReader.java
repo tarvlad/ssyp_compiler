@@ -62,6 +62,12 @@ public class InputReader {
                 case "INSPECT":
                     func.add(new Inspect(reader.nextInt()));
                     break;
+                case "JMP":
+                    func.add(new Jmp(reader.nextInt(), reader.nextInt(), reader.nextInt(), reader.nextInt()));
+                    break;
+                case "EXTERN":
+                    func.add(new Extern());
+                    break;
                 default:
                     assert s.endsWith(":");
                     functionName = s.substring(0, s.length() - 1);

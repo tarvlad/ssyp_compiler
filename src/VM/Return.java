@@ -8,7 +8,7 @@ public class Return implements Instruction {
 
     @Override
     public void execute(VmRuntime runtime) {
-        runtime.returnWith(returnOffset);
+        runtime.returnWith(runtime.stackAt(returnOffset));
     }
 
     @Override

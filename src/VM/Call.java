@@ -7,7 +7,6 @@ public class Call implements Instruction {
     Call(String functionLabel, int newFunctionOffset) {
         this.functionLabel = functionLabel;
         this.newFunctionOffset = newFunctionOffset;
-
     }
 
     @Override

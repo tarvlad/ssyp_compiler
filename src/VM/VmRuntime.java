@@ -10,7 +10,7 @@ public class VmRuntime {
     private final List<Pair<String, Integer>> callStack;
     private final int endInstruction = Integer.MAX_VALUE;
     private final HashMap<String, List<Instruction>> instructions = new HashMap<>();
-    private List<Instruction> currentInstructions = new ArrayList<Instruction>();
+    private List<Instruction> currentInstructions;
     private String currentFunctionName = "main";
 
     private int stackBase;
@@ -33,7 +33,7 @@ public class VmRuntime {
             this.instructions.put(pair.get0(), pair.get1());
         }
 
-        this.callStack.add(new Pair<>(currentFunctionName, this.stackBase));
+        this.callStack.add(new Pair<>(currentFunctionName, this.currentInstruction));
         this.currentInstructions = this.instructions.get(currentFunctionName);
     }
 
@@ -70,11 +70,14 @@ public class VmRuntime {
 
         assert Integer.signum(offset) == -1;
 
-        this.stackBase += offset;
+        int previousStackBase = this.stackBase;
+        this.stackBase += offset - 1; // advance by one from the free slot
         this.currentInstruction = 0;
 
+        this.setStackAt(1, previousStackBase);
+
         this.currentFunctionName = functionLabel;
-        this.callStack.add(new Pair<>(this.currentFunctionName, this.stackBase));
+        this.callStack.add(new Pair<>(this.currentFunctionName, 0));
     }
 
     public void returnWith(int obj) {
@@ -82,9 +85,11 @@ public class VmRuntime {
             this.currentInstruction = this.currentInstructions.size();
             this.stackBase = this.stack.size() - 1;
 
-            System.out.println(obj);
+            System.out.println("out: " + obj);
         } else {
-            this.currentInstruction = this.callStack.removeLast().get1();
+            this.callStack.removeLast(); // remove current function from stack
+            this.currentInstruction = this.callStack.getLast().get1();
+            this.currentInstructions = this.instructions.get(this.callStack.removeLast().get0());
             int base = this.stackAt(1);
             this.setStackAt(1, obj);
             this.stackBase = base;
@@ -95,5 +100,9 @@ public class VmRuntime {
         this.currentInstruction += offset;
 
         assert Integer.signum(this.currentInstruction) == 1 && this.currentInstruction < this.currentInstructions.size();
+    }
+
+    public String getCurrentFunctionName() {
+        return this.currentFunctionName;
     }
 }

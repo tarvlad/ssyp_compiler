@@ -1,32 +1,37 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Lexer {
+
     public static List<Token> tokenize(String input) {
         List<Token> tokens = new ArrayList<Token>();
-        String[] splitByLinebreak = input.split("\n");
-        List<String> splitByLinebreakAndSpace = new ArrayList<String>();
-        for (String s : splitByLinebreak) {
+        String[] splitByLine = input.split("\n");
+
+        List<String> splitSpcLine = new ArrayList<String>();
+        for (String s : splitByLine) {
             String[] splitBySpace = s.split(" ");
-            for (String elsOfSplitBySpace : splitBySpace) {
-                splitByLinebreakAndSpace.add(elsOfSplitBySpace);
-            }
+            splitSpcLine.addAll(Arrays.asList(splitBySpace));
         }
-        List<String> splitByFunctions = new ArrayList<String>();
-        for (String elsOfSplitByLinebreakAndSpase : splitByLinebreakAndSpace) {
-            char[] toCharElsOfSplitEnd = elsOfSplitByLinebreakAndSpase.toCharArray();
-            if ((toCharElsOfSplitEnd[0] == '#' || toCharElsOfSplitEnd[0] == '@') && toCharElsOfSplitEnd[toCharElsOfSplitEnd.length - 1] == ';') {
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, toCharElsOfSplitEnd.length - 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(toCharElsOfSplitEnd.length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
-            } else if (toCharElsOfSplitEnd[0] == '#' || toCharElsOfSplitEnd[0] == '@') {
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(1, toCharElsOfSplitEnd.length)));
-            } else if (toCharElsOfSplitEnd[elsOfSplitByLinebreakAndSpase.toCharArray().length - 1] == ';') {
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(0, toCharElsOfSplitEnd.length - 1)));
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase.substring(toCharElsOfSplitEnd.length - 1, elsOfSplitByLinebreakAndSpase.toCharArray().length)));
+
+        for (String elsSplitSpcLine : splitSpcLine) {
+            boolean isStartsWithSpecialSymbol = (elsSplitSpcLine.charAt(0) == '#' || elsSplitSpcLine.charAt(0) == '@');
+
+            if (isStartsWithSpecialSymbol && elsSplitSpcLine.charAt(elsSplitSpcLine.length() - 1) == ';') {
+                tokens.add(new Token(String.valueOf(elsSplitSpcLine.charAt(0))));
+                tokens.add(new Token(elsSplitSpcLine.substring(1, elsSplitSpcLine.length() - 1)));
+                tokens.add(new Token(elsSplitSpcLine.substring(elsSplitSpcLine.length() - 1)));
+
+            } else if (isStartsWithSpecialSymbol) {
+                tokens.add(new Token(String.valueOf(elsSplitSpcLine.charAt(0))));
+                tokens.add(new Token(elsSplitSpcLine.substring(1)));
+
+            } else if (elsSplitSpcLine.charAt(elsSplitSpcLine.length() - 1) == ';') {
+                tokens.add(new Token(elsSplitSpcLine.substring(0, elsSplitSpcLine.length() - 1)));
+                tokens.add(new Token(elsSplitSpcLine.substring(elsSplitSpcLine.length() - 1)));
+
             } else {
-                tokens.add(new Token(elsOfSplitByLinebreakAndSpase));
+                tokens.add(new Token(elsSplitSpcLine));
             }
         }
         return tokens;

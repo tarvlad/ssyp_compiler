@@ -9,9 +9,6 @@ public class VM {
 
         InputReader reader = new InputReader(args[0]);
 
-        (new VmRuntime(reader, 5)).run();
-//        while( reader.hasNext()) {
-//            System.out.println(reader.nextInstruction());
-//        }
+        (new VmRuntime(reader, 512)).run();
     }
 }

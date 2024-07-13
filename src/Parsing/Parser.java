@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Parser {
-    final private ArrayList<String> tokens;
-    public Parser(ArrayList<String> tokens) {
+    final private List<String> tokens;
+    public Parser(List<String> tokens) {
         this.tokens = tokens;
     }
 
@@ -40,10 +40,10 @@ public class Parser {
         for (int k = 0; k < tokens.size() - 1; k++) {
             thisToken = tokens.get(k);
             nextToken = tokens.get(k + 1);
-            if (thisToken.equals("#") && (nextToken.equals("F_VARS_BEGIN") || nextToken.equals("F_CONSTANTS_BEGIN")))
+            if (thisToken.equals("#") && nextToken.equals("F_VARS_BEGIN"))
             {
                 InVars = true;
-            } else if (thisToken.equals("#") && nextToken.equals("F_VARS_END") || nextToken.equals("F_CONSTANTS_END")) {
+            } else if (thisToken.equals("#") && nextToken.equals("F_VARS_END")) {
                 InVars = false;
             } else if (nextToken.equals("@") && InVars) {
                 count++;
@@ -52,7 +52,7 @@ public class Parser {
         return count;
     }
 
-    public Variable[] createVarsList(String func_name) {
+    Variable[] createVarsList(String func_name) {
         List<String> tokens = getFunctionTokens(func_name, this.tokens);
         boolean InVars = false;
         String thisToken, nextToken;
@@ -61,13 +61,13 @@ public class Parser {
         for (int k = 0; k < tokens.size() - 1; k++) {
             thisToken = tokens.get(k);
             nextToken = tokens.get(k + 1);
-            if (thisToken.equals("#") && (nextToken.equals("F_VARS_BEGIN") || nextToken.equals("F_CONSTANTS_BEGIN")))
+            if (thisToken.equals("#") && nextToken.equals("F_VARS_BEGIN"))
             {
                 InVars = true;
-            } else if (thisToken.equals("#") && (nextToken.equals("F_VARS_END") || nextToken.equals("F_CONSTANTS_END"))) {
+            } else if (thisToken.equals("#") && nextToken.equals("F_VARS_END")) {
                 InVars = false;
-            } else if (nextToken.equals("@") && InVars) {
-                variables[index] = new Variable(thisToken, tokens.get(k + 2));
+            } else if (thisToken.equals("@") && InVars) {
+                variables[index] = new Variable(tokens.get(k + 2), nextToken);
                 index++;
             }
         }
@@ -107,8 +107,8 @@ public class Parser {
                 InArgs = true;
             } else if (thisToken.equals("#") && nextToken.equals("F_ARGS_END")) {
                 return arguments;
-            } else if (nextToken.equals("@") && InArgs) {
-                arguments[index] = new Variable(thisToken, tokens.get(k + 2));
+            } else if (thisToken.equals("@") && InArgs) {
+                arguments[index] = new Variable(tokens.get(k + 2), nextToken);
                 index++;
             }
         }
@@ -137,6 +137,11 @@ public class Parser {
             case "*" -> InstructionType.MUL;
             case "/" -> InstructionType.DIV;
             case "=" -> InstructionType.ASSIGN;
+            case "IF" -> InstructionType.IF;
+            case "ELIF" -> InstructionType.ELIF;
+            case "ELSE" -> InstructionType.ELSE;
+            case "ENDIF" -> InstructionType.ENDIF;
+            case "F_RETURN" -> InstructionType.RETURN;
             default -> InstructionType.CALL;
         };
     }
@@ -182,5 +187,41 @@ public class Parser {
             }
         }
         return instructions;
+    }
+
+    Function getFunction(String func_name) {
+        return new Function(
+                func_name,
+                createArgsList(func_name),
+                createVarsList(func_name),
+                createInstructionList(func_name)
+        );
+    }
+
+    ArrayList<String> getFunctionNames() {
+        ArrayList<String> functionNames = new ArrayList<>();
+        boolean InFunc = false;
+        for (int k = 1; k < this.tokens.size(); k++) {
+            if (this.tokens.get(k - 1).equals("#") && this.tokens.get(k).equals("F_BEGIN")) {
+                InFunc = true;
+            }
+            else if (this.tokens.get(k - 1).equals("#") && this.tokens.get(k).equals("F_END")) {
+                InFunc = false;
+            }
+            else if (InFunc && this.tokens.get(k - 1).equals("#") && this.tokens.get(k).equals("F_NAME")) {
+                functionNames.add(tokens.get(k + 1));
+            }
+        }
+        return functionNames;
+    }
+
+    public Function[] getFunctions() {
+        ArrayList<String> functionNames = getFunctionNames();
+        int length = functionNames.size();
+        Function[] functions = new Function[length];
+        for (int k = 0; k < length; k++) {
+            functions[k] = getFunction(functionNames.get(k));
+        }
+        return functions;
     }
 }

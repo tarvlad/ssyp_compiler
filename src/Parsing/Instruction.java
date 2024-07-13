@@ -1,5 +1,6 @@
 package Parsing;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public class Instruction {
@@ -28,5 +29,15 @@ public class Instruction {
 
     public Optional<String> functionName() {
         return this.functionName;
+    }
+
+    @Override
+    public String toString() {
+        String[] words = new String[1 + vars.length];
+        words[0] = functionName + ": " + instructionType.toString();
+        for (int k = 0; k < words.length - 1; k++) {
+            words[k + 1] = vars[k].toString();
+        }
+        return String.join(" ", words);
     }
 }

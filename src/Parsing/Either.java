@@ -24,4 +24,13 @@ public class Either<R,L> {
     public Optional<R> getRight() {
         return Optional.ofNullable(this.right);
     }
+
+    @Override
+    public String toString() {
+        if (left != null) {
+            return left.toString();
+        } else {
+            return right.toString();
+        }
+    }
 }

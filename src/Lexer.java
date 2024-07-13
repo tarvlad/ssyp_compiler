@@ -6,9 +6,9 @@ public class Lexer {
         List<Token> tokens = new ArrayList<>();
         String[] splitByLine = input.split("\n");
         List<String> splitSpcLine = new ArrayList<>();
-        for (String s : splitByLine) {
-            String[] splitBySpace = s.split(" ");
-            splitSpcLine.addAll(Arrays.asList(splitBySpace));
+        for (String elementOfSplitByLine : splitByLine) {
+            String[] splitBySpc = elementOfSplitByLine.split(" ");
+            splitSpcLine.addAll(Arrays.asList(splitBySpc));
         }
         for (String elsSplitSpcLine : splitSpcLine) {
             boolean isStartsWithSpecialSymbol = (elsSplitSpcLine.charAt(0) == '#' || elsSplitSpcLine.charAt(0) == '@');

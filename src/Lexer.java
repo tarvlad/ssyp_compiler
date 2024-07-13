@@ -10,23 +10,23 @@ public class Lexer {
             String[] splitBySpc = elementOfSplitByLine.split(" ");
             splitSpcLine.addAll(Arrays.asList(splitBySpc));
         }
-        for (String elementsOfSplitSpcLine : splitSpcLine) {
-            boolean isStartsWithSpecialSymbol = (elementsOfSplitSpcLine.charAt(0) == '#' || elementsOfSplitSpcLine.charAt(0) == '@');
-            if (isStartsWithSpecialSymbol && elementsOfSplitSpcLine.charAt(elementsOfSplitSpcLine.length() - 1) == ';') {
-                tokens.add(new Token(String.valueOf(elementsOfSplitSpcLine.charAt(0))));
-                tokens.add(new Token(elementsOfSplitSpcLine.substring(1, elementsOfSplitSpcLine.length() - 1)));
-                tokens.add(new Token(elementsOfSplitSpcLine.substring(elementsOfSplitSpcLine.length() - 1)));
+        for (String elementOfSplitSpcLine : splitSpcLine) {
+            boolean isStartsWithSpecialSymbol = (elementOfSplitSpcLine.charAt(0) == '#' || elementOfSplitSpcLine.charAt(0) == '@');
+            if (isStartsWithSpecialSymbol && elementOfSplitSpcLine.charAt(elementOfSplitSpcLine.length() - 1) == ';') {
+                tokens.add(new Token(String.valueOf(elementOfSplitSpcLine.charAt(0))));
+                tokens.add(new Token(elementOfSplitSpcLine.substring(1, elementOfSplitSpcLine.length() - 1)));
+                tokens.add(new Token(elementOfSplitSpcLine.substring(elementOfSplitSpcLine.length() - 1)));
 
             } else if (isStartsWithSpecialSymbol) {
-                tokens.add(new Token(String.valueOf(elementsOfSplitSpcLine.charAt(0))));
-                tokens.add(new Token(elementsOfSplitSpcLine.substring(1)));
+                tokens.add(new Token(String.valueOf(elementOfSplitSpcLine.charAt(0))));
+                tokens.add(new Token(elementOfSplitSpcLine.substring(1)));
 
-            } else if (elementsOfSplitSpcLine.charAt(elementsOfSplitSpcLine.length() - 1) == ';') {
-                tokens.add(new Token(elementsOfSplitSpcLine.substring(0, elementsOfSplitSpcLine.length() - 1)));
-                tokens.add(new Token(elementsOfSplitSpcLine.substring(elementsOfSplitSpcLine.length() - 1)));
+            } else if (elementOfSplitSpcLine.charAt(elementOfSplitSpcLine.length() - 1) == ';') {
+                tokens.add(new Token(elementOfSplitSpcLine.substring(0, elementOfSplitSpcLine.length() - 1)));
+                tokens.add(new Token(elementOfSplitSpcLine.substring(elementOfSplitSpcLine.length() - 1)));
 
             } else {
-                tokens.add(new Token(elementsOfSplitSpcLine));
+                tokens.add(new Token(elementOfSplitSpcLine));
             }
         }
         return tokens;

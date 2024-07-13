@@ -1,6 +1,5 @@
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -45,11 +44,16 @@ public class Lexer {
 
     public static void main(String[] args) {
         String text = null;
+        ArrayList<String> lines = new ArrayList<>();
         try {
-            text = String.join("\n", (CharSequence) Files.lines(Paths.get("compiler/test.txt")));
+            Scanner scanner = new Scanner(new File("test.txt"));
+            while (scanner.hasNextLine()) {
+                lines.add(scanner.nextLine().trim());
+            }
         } catch (IOException e) {
             e.getLocalizedMessage();
         }
+        text = String.join("\n", lines);
         String[] key_combs = {"#", "@", ";"};
         Lexer lexer = new Lexer(
                 text,

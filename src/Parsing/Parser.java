@@ -1,5 +1,6 @@
 package Parsing;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -146,23 +147,17 @@ public class Parser {
         };
     }
 
-    Either<String, Integer>[] toEither(ArrayList<String> array) {
-        int size = array.size() - array.stream().filter(s -> s.equals("#")).toArray().length, index = 0;
-        Either<String, Integer>[] any = new Either[size];
-        for (int k = 1; k < size; k++) {
-            if (array.get(k - 1).equals("#")) {
-                any[index] = Either.right(Integer.parseInt(array.get(k)));
-                index++;
-            } else {
-                any[index] = Either.left(array.get(k));
-            }
+    Either<String, Integer>[] toEitherArray(ArrayList<Either<String, Integer>> arrayList) {
+        Either<String, Integer>[] array = new Either[arrayList.size()];
+        for (int k = 0; k < arrayList.size(); k++) {
+            array[k] = arrayList.get(k);
         }
-        return any;
+        return array;
     }
 
     Instruction[] createInstructionList(String func_name) {
         List<String> tokens = getFunctionTokens(func_name, this.tokens);
-        ArrayList<String> args = new ArrayList<>();
+        ArrayList<Either<String, Integer>> args = new ArrayList<>();
         InstructionType instructionType = null;
         int index = 0, count = countOfInstruction(tokens);
         Instruction[] instructions = new Instruction[count];
@@ -179,11 +174,18 @@ public class Parser {
                 instructionType = getInstructionType(instructionName);
             } else if (InInstruction && tokens.get(k).equals(";")) {
                 instructions[index] = new Instruction(instructionType,
-                        toEither(args),
+                        toEitherArray(args),
                         Optional.of(instructionName));
                 InInstruction = false;
+                index++;
+                args.clear();
             } else if (InInstruction) {
-                args.add(tokens.get(k));
+                if (tokens.get(k).equals("#")) {
+                    args.add(Either.right(Integer.parseInt(tokens.get(k + 1))));
+                    k++;
+                } else {
+                    args.add(Either.left(tokens.get(k)));
+                }
             }
         }
         return instructions;

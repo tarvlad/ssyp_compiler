@@ -34,8 +34,9 @@ public class Function {
                     ARGS: %s
                     VARS: %s
                     INSTRUCTS: %s
-                """, String.join(", ", args),
+                """, name,
+                String.join(", ", args),
                 String.join(", ", vars),
-                String.join(", ", instructs));
+                String.join("\n\t\t", instructs));
     }
 }

@@ -10,10 +10,9 @@
 @Int z;
 #F_VARS_END;
 #F_BODY_BEGIN;
-#ADD z x y;
-#MUL z x z;
-#MUL z y z;
-#SET x z;
-#END_IF;
+#+ z x y;
+#* z x z;
+#* z y z;
+#= x z;
 #F_BODY_END;
 #F_END;

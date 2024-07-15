@@ -25,11 +25,9 @@ public class Lexer {
                 tokens.add(String.valueOf(elementOfSplitSpcLine.charAt(0)));
                 tokens.add(elementOfSplitSpcLine.substring(1, elementOfSplitSpcLine.length() - 1));
                 tokens.add(elementOfSplitSpcLine.substring(elementOfSplitSpcLine.length() - 1));
-
             } else if (isStartsWithSpecialSymbol) {
                 tokens.add(String.valueOf(elementOfSplitSpcLine.charAt(0)));
                 tokens.add(elementOfSplitSpcLine.substring(1));
-
             } else if (elementOfSplitSpcLine.charAt(elementOfSplitSpcLine.length() - 1) == ';') {
                 tokens.add(elementOfSplitSpcLine.substring(0, elementOfSplitSpcLine.length() - 1));
                 tokens.add(elementOfSplitSpcLine.substring(elementOfSplitSpcLine.length() - 1));

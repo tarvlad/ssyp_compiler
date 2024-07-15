@@ -16,7 +16,7 @@ public class BytecodeFile {
         functions = new HashMap<>();
         BytecodeLines = new ArrayList<>();
     }
-    void init() {
+    public void init() {
         try {
             File file = new File(this.filename);
             if (file.createNewFile()) {

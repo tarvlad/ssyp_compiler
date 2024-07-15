@@ -3,6 +3,7 @@ package Translator;
 import Parsing.Either;
 import Parsing.Function;
 import Parsing.Instruction;
+import Parsing.Variable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class Translator {
-    private static BytecodeFile translate(Function[] functions, BytecodeFile file) {
+    public static BytecodeFile translate(Function[] functions, BytecodeFile file) {
         for (Function func : functions) {
             generateFunction(func, file);
         }
@@ -20,51 +21,47 @@ public class Translator {
 
     private static void generateFunction(Function func, BytecodeFile file) {
         ArrayList<String> virtualStack = new ArrayList<>();
-        virtualStack.addAll(Arrays.stream(func.arguments).map(arg -> arg.name).toList());
-        virtualStack.addAll(Arrays.stream(func.locals).map(local -> local.name).toList());
+        virtualStack.addAll(Arrays.stream(func.arguments()).map(Variable::name).toList());
+        virtualStack.addAll(Arrays.stream(func.locals()).map(Variable::name).toList());
 
-        file.add_func(func.name);
+        file.add_func(func.name());
 
-        for (Instruction ins : func.instructions) {
+        for (Instruction ins : func.instructions()) {
             switch (ins.type()) {
-                case ADD -> {
-                    file.add_instructions(
-                            new Add(getVarAddress(ins, 0, virtualStack, file),
-                                    getVarAddress(ins, 1, virtualStack, file),
-                                    getVarAddress(ins, 2, virtualStack, file))
-                    );
+                case ADD -> file.add_instructions(
+                        new Add(getVarAddress(ins, 0, virtualStack, file),
+                                getVarAddress(ins, 1, virtualStack, file),
+                                getVarAddress(ins, 2, virtualStack, file))
+                );
 
-                }
-                case SUB -> {
-                    file.add_instructions(
-                            new Sub(getVarAddress(ins, 0, virtualStack, file),
-                                    getVarAddress(ins, 1, virtualStack, file),
-                                    getVarAddress(ins, 2, virtualStack, file))
-                    );
-                }
-                case DIV -> {
-                    file.add_instructions(
-                            new Div(getVarAddress(ins, 0, virtualStack, file),
-                                    getVarAddress(ins, 1, virtualStack, file),
-                                    getVarAddress(ins, 2, virtualStack, file))
-                    );
-                }
-                case MUL -> {
-                    file.add_instructions(
-                            new Mul(getVarAddress(ins, 0, virtualStack, file),
-                                    getVarAddress(ins, 1, virtualStack, file),
-                                    getVarAddress(ins, 2, virtualStack, file))
-                    );
-                }
+
+                case SUB -> file.add_instructions(
+                        new Sub(getVarAddress(ins, 0, virtualStack, file),
+                                getVarAddress(ins, 1, virtualStack, file),
+                                getVarAddress(ins, 2, virtualStack, file))
+                );
+
+                case DIV -> file.add_instructions(
+                        new Div(getVarAddress(ins, 0, virtualStack, file),
+                                getVarAddress(ins, 1, virtualStack, file),
+                                getVarAddress(ins, 2, virtualStack, file))
+                );
+
+                case MUL -> file.add_instructions(
+                        new Mul(getVarAddress(ins, 0, virtualStack, file),
+                                getVarAddress(ins, 1, virtualStack, file),
+                                getVarAddress(ins, 2, virtualStack, file))
+                );
+
                 case ASSIGN -> {
 
-                    Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack, file);
+                    Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack);
                     if (arg1.isEmpty()) {
                         System.out.println();
                         throw new RuntimeException();
                     }
 
-                    Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack, file);
+                    Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
                     arg2.ifPresent(arg -> file.add_instructions(
                             new Mov(arg1.get(),
                                     arg
@@ -80,10 +77,10 @@ public class Translator {
                     }
                 }
                 case CALL -> {
-                    Optional<Integer> returnArgsAddress = getVarOnlyAddress(ins, 0, virtualStack, file);
+                    Optional<Integer> returnArgsAddress = getVarOnlyAddress(ins, 0, virtualStack);
 
                     // gather address of args
-                    int i = 1;
+                    int i = returnArgsAddress.isEmpty() ? 0 : 1;
                     ArrayList<Integer> varAddress = new ArrayList<>();
                     while (ins.get(i).isPresent()) {
                         varAddress.add(getVarAddress(ins, i, virtualStack, file));
@@ -139,7 +136,7 @@ public class Translator {
         }
     }
 
-    private static Optional<Integer> getVarOnlyAddress(Instruction ins, int index, ArrayList<String> virtualStack, BytecodeFile file) {
+    private static Optional<Integer> getVarOnlyAddress(Instruction ins, int index, ArrayList<String> virtualStack) {
 
         if (ins.get(index).isPresent()) {
             Either<String, Integer> arg = ins.get(index).get();

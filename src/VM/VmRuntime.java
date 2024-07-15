@@ -42,10 +42,6 @@ public class VmRuntime {
             this.runNext();
             assert Integer.signum(this.currentInstruction) == 1;
         }
-
-        for (int i : IntStream.range(0, this.stack.size()).toArray()) {
-            System.out.println(this.stack.get(i));
-        }
     }
 
     private void runNext() {
@@ -64,7 +60,7 @@ public class VmRuntime {
     }
 
     public void enterNewFunction(String functionLabel, int offset) {
-        this.callStack.getLast().set1(this.currentInstruction + 1);
+        this.callStack.getLast().set1(this.currentInstruction);
 
         this.currentInstructions = this.instructions.get(functionLabel);
 
@@ -89,7 +85,9 @@ public class VmRuntime {
         } else {
             this.callStack.removeLast(); // remove current function from stack
             this.currentInstruction = this.callStack.getLast().get1();
-            this.currentInstructions = this.instructions.get(this.callStack.removeLast().get0());
+            this.currentFunctionName = this.callStack.getLast().get0();
+            this.currentInstructions = this.instructions.get(this.currentFunctionName);
+
             int base = this.stackAt(1);
             this.setStackAt(1, obj);
             this.stackBase = base;

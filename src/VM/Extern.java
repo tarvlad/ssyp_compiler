@@ -16,9 +16,11 @@ public class Extern implements Instruction {
 
                 System.out.println(obj);
             }
+
+            runtime.returnWith(0);
+            return;
         }
 
-        // TODO
         runtime.returnWith(0);
     }
 

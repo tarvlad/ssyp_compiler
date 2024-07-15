@@ -42,7 +42,6 @@ public class Lexer {
         return lexemes.stream().filter(elm-> !Objects.equals(elm, ""));
     }
 
-
     public List<String> getTokens(String filename) {
         String text = null;
         ArrayList<String> lines = new ArrayList<>();

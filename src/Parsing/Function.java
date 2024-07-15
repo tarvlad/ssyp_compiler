@@ -1,19 +1,6 @@
 package Parsing;
 
-import java.util.Arrays;
-
-public class Function {
-    public final String name;
-    public final Variable[] arguments;
-    public final Variable[] locals;
-    public final Instruction[] instructions;
-
-    public Function(String name, Variable[] arguments, Variable[] locals, Instruction[] instructions) {
-        this.name = name;
-        this.arguments = arguments;
-        this.locals = locals;
-        this.instructions = instructions;
-    }
+public record Function(String name, Variable[] arguments, Variable[] locals, Instruction[] instructions) {
 
     @Override
     public String toString() {
@@ -30,11 +17,11 @@ public class Function {
             instructs[k] = instructions[k].toString();
         }
         return String.format("""
-                Function %s:
-                    ARGS: %s
-                    VARS: %s
-                    INSTRUCTS: %s
-                """, name,
+                        Function %s:
+                            ARGS: %s
+                            VARS: %s
+                            INSTRUCTS: %s
+                        """, name,
                 String.join(", ", args),
                 String.join(", ", vars),
                 String.join("\n\t\t", instructs));

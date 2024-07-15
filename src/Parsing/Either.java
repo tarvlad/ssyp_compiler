@@ -1,11 +1,10 @@
 package Parsing;
 
-import java.lang.reflect.Array;
 import java.util.Optional;
 
 public class Either<R,L> {
-    private L left;
-    private R right;
+    private final L left;
+    private final R right;
 
     public static <L,R> Either<L,R> left(L left) {
         return new Either(left, null);

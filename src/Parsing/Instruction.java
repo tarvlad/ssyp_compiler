@@ -30,7 +30,7 @@ public class Instruction {
     public Optional<String> functionName() {
         return this.functionName;
     }
-
+  
     @Override
     public String toString() {
         String[] words = new String[1 + vars.length];

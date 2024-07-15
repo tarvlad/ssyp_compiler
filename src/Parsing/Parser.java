@@ -1,6 +1,7 @@
 package Parsing;
 
 import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,7 @@ public class Parser {
         for (int k = 0; k < tokens.size() - 1; k++) {
             thisToken = tokens.get(k);
             nextToken = tokens.get(k + 1);
+          
             if (thisToken.equals("#") && nextToken.equals("F_VARS_BEGIN"))
             {
                 InVars = true;
@@ -190,7 +192,6 @@ public class Parser {
         }
         return instructions;
     }
-
     Function getFunction(String func_name) {
         return new Function(
                 func_name,

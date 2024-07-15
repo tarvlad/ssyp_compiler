@@ -19,7 +19,7 @@ public class Test {
         file.init();
 
         Translator.translate(functions, file);
-        
+
         file.write();
     }
 }

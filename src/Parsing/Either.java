@@ -3,8 +3,8 @@ package Parsing;
 import java.util.Optional;
 
 public class Either<R,L> {
-    private L left;
-    private R right;
+    private final L left;
+    private final R right;
 
     public static <L,R> Either<L,R> left(L left) {
         return new Either(left, null);
@@ -23,5 +23,14 @@ public class Either<R,L> {
 
     public Optional<R> getRight() {
         return Optional.ofNullable(this.right);
+    }
+
+    @Override
+    public String toString() {
+        if (left != null) {
+            return left.toString();
+        } else {
+            return right.toString();
+        }
     }
 }

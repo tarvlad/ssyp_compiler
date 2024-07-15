@@ -87,6 +87,7 @@ public class VmRuntime {
             this.currentInstruction = this.callStack.getLast().get1();
             this.currentFunctionName = this.callStack.getLast().get0();
             this.currentInstructions = this.instructions.get(this.currentFunctionName);
+
             int base = this.stackAt(1);
             this.setStackAt(1, obj);
             this.stackBase = base;

@@ -4,12 +4,11 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Lexer {
-    private final String code;
+    private String code = null;
     private final String[] key_combs;
     public String[] separators = {" ", "\n", "  "};
     public Boolean DO_STRIP = true;
-    public Lexer(String code, String[] key_combs) {
-        this.code = code;
+    public Lexer(String[] key_combs) {
         this.key_combs = key_combs;
     }
 
@@ -19,7 +18,9 @@ public class Lexer {
         lexemes.add(this.code);
         for (String sep: this.separators) {
             for (String elm: lexemes) {
-                Collections.addAll(code_fragments, elm.split(sep));
+                if (elm != null) {
+                    Collections.addAll(code_fragments, elm.split(sep));
+                }
             }
         }
         lexemes = code_fragments;
@@ -41,25 +42,21 @@ public class Lexer {
         return lexemes.stream().filter(elm-> !Objects.equals(elm, ""));
     }
 
-
-    public static void main(String[] args) {
+    public List<String> getTokens(String filename) {
         String text = null;
         ArrayList<String> lines = new ArrayList<>();
         try {
-            Scanner scanner = new Scanner(new File("test.txt"));
+            Scanner scanner = new Scanner(new File(filename));
             while (scanner.hasNextLine()) {
                 lines.add(scanner.nextLine().trim());
             }
         } catch (IOException e) {
-            e.getLocalizedMessage();
+            e.printStackTrace();
         }
-        text = String.join("\n", lines);
-        String[] key_combs = {"#", "@", ";"};
         Lexer lexer = new Lexer(
-                text,
-                key_combs
+                this.key_combs
                 );
-        List<String> tokens = lexer.tokenize().toList();
-        System.out.print(tokens);
+        lexer.code = String.join("\n", lines);
+        return lexer.tokenize().toList();
     }
 }

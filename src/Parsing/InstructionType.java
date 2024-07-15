@@ -6,5 +6,10 @@ public enum InstructionType {
     MUL,
     DIV,
     ASSIGN,
-    CALL
+    CALL,
+    IF,
+    ENDIF,
+    ELIF,
+    ELSE,
+    RETURN
 }

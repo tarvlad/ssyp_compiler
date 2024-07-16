@@ -34,6 +34,23 @@ public class Parser {
         return tokens.subList(begin, end);
     }
 
+    int countOfTypes(List<String> tokens, int index) {
+        int count = 0;
+        for (int k = index; !tokens.get(k).equals(";"); k++) {
+            count++;
+        }
+        return count - 1;
+    }
+
+    String[] getTypes(List<String> tokens, int index) {
+        int length = countOfTypes(tokens, index);
+        String[] types = new String[length];
+        for (int k = 0; k < length; k++) {
+            types[k] = tokens.get(k + index);
+        }
+        return types;
+    }
+
     int countOfVars(List<String> tokens) {
         int count = 0;
         String thisToken, nextToken;
@@ -68,7 +85,7 @@ public class Parser {
             } else if (thisToken.equals("#") && nextToken.equals("F_VARS_END")) {
                 return variables;
             } else if (thisToken.equals("@") && InVars) {
-                variables[index] = new Variable(tokens.get(k + 2), nextToken);
+                variables[index] = new Variable(tokens.get(k + 2), getTypes(tokens, k + 1));
                 index++;
             }
         }
@@ -109,7 +126,7 @@ public class Parser {
             } else if (thisToken.equals("#") && nextToken.equals("F_ARGS_END")) {
                 return arguments;
             } else if (thisToken.equals("@") && InArgs) {
-                arguments[index] = new Variable(tokens.get(k + 2), nextToken);
+                arguments[index] = new Variable(tokens.get(k + 2), getTypes(tokens, k + 1));
                 index++;
             }
         }
@@ -139,6 +156,8 @@ public class Parser {
             case "*" -> InstructionType.MUL;
             case "/" -> InstructionType.DIV;
             case "=" -> InstructionType.ASSIGN;
+            case "[]" -> InstructionType.ARRAY_IN;
+            case "][" -> InstructionType.ARRAY_OUT;
             case "IF" -> InstructionType.IF;
             case "ELIF" -> InstructionType.ELIF;
             case "ELSE" -> InstructionType.ELSE;

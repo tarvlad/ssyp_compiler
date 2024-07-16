@@ -160,10 +160,17 @@ public class Translator {
                     throw new RuntimeException();
                 });
 
+                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
+                blocks.getLast().addJmpInfo(instructions.size() - 1);
+
                 blocks.getLast().mid.add(instructions.size() - 1);
             }
 
-            case ELSE -> blocks.getLast().elseStart = Optional.of(instructions.size()); // TODO: check for correctness
+            case ELSE -> {
+                blocks.getLast().elseStart = Optional.of(instructions.size()); // TODO: check for correctness
+                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
+                blocks.getLast().addJmpInfo(instructions.size() - 1);
+            }
 
             case ENDIF -> {
                 blocks.getLast().end = instructions.size(); // TODO: check for correctness
@@ -221,28 +228,31 @@ public class Translator {
     }
 
     private static int orCreateStack(int literal, ArrayList<String> virtualStack, ArrayList<BytecodeInstruction> instructions) {
-        int pos = virtualStack.indexOf("#" + literal);
+        int pos = virtualStack.indexOf(STR."#\{literal}");
 
         if (pos == -1) {
-            virtualStack.add("#" + literal); // literals will have a # before them
+            virtualStack.add(STR."#\{literal}"); // literals will have a # before them
             pos = (virtualStack.size()) - 1;
-          
+
             instructions.add(new Set(-pos, literal));
         }
-        
+
         return pos;
     }
 }
 
 class Block {
     int start;
+    int startJump;
     ArrayList<Integer> mid;
+    ArrayList<Integer> midJump;
     Optional<Integer> elseStart;
     int end;
 
     Block(int start) {
         this.start = start;
         this.mid = new ArrayList<>();
+        this.midJump = new ArrayList<>();
         this.end = Integer.MAX_VALUE;
         this.elseStart = Optional.empty();
     }
@@ -251,19 +261,43 @@ class Block {
         assert this.end != Integer.MAX_VALUE;
 
         if (instructions.get(this.start) instanceof Jump) {
-            ((Jump) instructions.get(this.start)).setJumpDestination(this.mid.getFirst() == null ? this.elseStart.orElseGet(() -> this.end) : this.mid.getFirst());
+            ((Jump) instructions.get(this.start)).setJumpDestination(this.mid.isEmpty() ? this.elseStart.orElseGet(() -> this.end) : this.mid.getFirst());
         } else {
             System.out.println("invalid if jmp instruction at index");
             throw new RuntimeException();
         }
 
+        if (instructions.get(this.startJump) instanceof Jump) {
+            ((Jump) instructions.get(this.startJump)).setJumpDestination(this.end);
+        } else {
+            System.out.println("invalid if jmp jmp instruction at index");
+            throw new RuntimeException();
+        }
+
         for (int i : this.mid) {
             if (instructions.get(i) instanceof Jump) {
-                ((Jump) instructions.get(i)).setJumpDestination(this.mid.size() > i + 1 ? this.elseStart.orElseGet(() -> this.end) : this.mid.get(i + 1));
+                ((Jump) instructions.get(i)).setJumpDestination(this.mid.size() < i + 1 ? this.elseStart.orElseGet(() -> this.end) : this.mid.get(i + 1));
             } else {
                 System.out.println("invalid else if jmp instruction at index");
                 throw new RuntimeException();
             }
+        }
+
+        for (int i : this.midJump) {
+            if (instructions.get(i) instanceof Jump) {
+                ((Jump) instructions.get(i)).setJumpDestination(this.end);
+            } else {
+                System.out.println("invalid else if jmp jmp instruction at index");
+                throw new RuntimeException();
+            }
+        }
+    }
+
+    void addJmpInfo( int instructionIndex) {
+        if (this.midJump.isEmpty()) {
+            this.startJump = instructionIndex;
+        } else {
+            midJump.add(instructionIndex);
         }
     }
 }

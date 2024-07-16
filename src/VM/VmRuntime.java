@@ -29,7 +29,6 @@ public class VmRuntime {
 
         while (reader.hasNext()) {
             Pair<String, ArrayList<Instruction>> pair = reader.nextFunction();
-            pair.get1().iterator().forEachRemaining(Instruction::println);
             this.instructions.put(pair.get0(), pair.get1());
         }
 
@@ -41,10 +40,6 @@ public class VmRuntime {
         while (this.currentInstructions.size() > this.currentInstruction) {
             this.runNext();
             assert Integer.signum(this.currentInstruction) == 1;
-        }
-
-        for (int i : IntStream.range(0, this.stack.size()).toArray()) {
-            System.out.println(this.stack.get(i));
         }
     }
 
@@ -64,7 +59,7 @@ public class VmRuntime {
     }
 
     public void enterNewFunction(String functionLabel, int offset) {
-        this.callStack.getLast().set1(this.currentInstruction + 1);
+        this.callStack.getLast().set1(this.currentInstruction);
 
         this.currentInstructions = this.instructions.get(functionLabel);
 
@@ -81,7 +76,7 @@ public class VmRuntime {
     }
 
     public void returnWith(int obj) {
-        if (this.stackAt(1) == this.endInstruction) {
+        if (this.stackAt(1) == this.endInstruction || this.callStack.size() == 1) {
             this.currentInstruction = this.currentInstructions.size();
             this.stackBase = this.stack.size() - 1;
 
@@ -89,7 +84,9 @@ public class VmRuntime {
         } else {
             this.callStack.removeLast(); // remove current function from stack
             this.currentInstruction = this.callStack.getLast().get1();
-            this.currentInstructions = this.instructions.get(this.callStack.removeLast().get0());
+            this.currentFunctionName = this.callStack.getLast().get0();
+            this.currentInstructions = this.instructions.get(this.currentFunctionName);
+
             int base = this.stackAt(1);
             this.setStackAt(1, obj);
             this.stackBase = base;
@@ -100,6 +97,8 @@ public class VmRuntime {
         this.currentInstruction += offset;
 
         assert Integer.signum(this.currentInstruction) == 1 && this.currentInstruction < this.currentInstructions.size();
+
+        this.currentInstruction--; // TODO: check for correctness
     }
 
     public String getCurrentFunctionName() {

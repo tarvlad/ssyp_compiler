@@ -29,7 +29,6 @@ public class VmRuntime {
 
         while (reader.hasNext()) {
             Pair<String, ArrayList<Instruction>> pair = reader.nextFunction();
-            pair.get1().iterator().forEachRemaining(Instruction::println);
             this.instructions.put(pair.get0(), pair.get1());
         }
 

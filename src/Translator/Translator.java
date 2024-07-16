@@ -34,6 +34,13 @@ public class Translator {
 
         ArrayList<Block> block = new ArrayList<>();
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
+
+        for (Variable local: func.locals()) {
+            if (local.type()[0].equals("Array")) {
+                instructions.add(new CreateArray(virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+            }
+        }
+
         for (Instruction ins : func.instructions()) {
             generateInstruction(ins, block, instructions, virtualStack, typeMap);
         }
@@ -79,27 +86,30 @@ public class Translator {
             );
 
             case ASSIGN -> {
-                Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack);
-                if (arg1.isEmpty()) {
-                    System.out.println();
-                    throw new RuntimeException();
-                }
+                if (getVarType(ins, 0, typeMap).equals("Int")) {
+                    Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack);
+                    if (arg1.isEmpty()) {
+                        System.out.println();
+                        throw new RuntimeException();
+                    }
 
-                Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
-                arg2.ifPresent(arg -> instructions.add(
-                        new Mov(arg1.get(),
-                                arg
-                        )
-                ));
-
-                if (arg2.isEmpty()) {
-                    instructions.add(
-                            new Mov(getVarAddress(ins, 0, virtualStack, instructions),
-                                    ins.get(1).flatMap(Either::getRight).get()
+                    Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
+                    arg2.ifPresent(arg -> instructions.add(
+                            new Mov(arg1.get(),
+                                    arg
                             )
-                    );
+                    ));
+
+                    if (arg2.isEmpty()) {
+                        instructions.add(
+                                new Mov(getVarAddress(ins, 0, virtualStack, instructions),
+                                        ins.get(1).flatMap(Either::getRight).get()
+                                )
+                        );
+                    }
                 }
             }
+
             case CALL -> {
                 Optional<Integer> returnArgsAddress = getVarOnlyAddress(ins, 0, virtualStack);
 

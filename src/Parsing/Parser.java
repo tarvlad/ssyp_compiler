@@ -51,6 +51,15 @@ public class Parser {
         return types;
     }
 
+    String getVar(List<String> tokens, int index) {
+        for (int k = index; k < tokens.size(); k++) {
+            if (tokens.get(k).equals(";")) {
+                return tokens.get(k - 1);
+            }
+        }
+        return "#ERROR";
+    }
+
     int countOfVars(List<String> tokens) {
         int count = 0;
         String thisToken, nextToken;
@@ -85,7 +94,7 @@ public class Parser {
             } else if (thisToken.equals("#") && nextToken.equals("F_VARS_END")) {
                 return variables;
             } else if (thisToken.equals("@") && InVars) {
-                variables[index] = new Variable(tokens.get(k + 2), getTypes(tokens, k + 1));
+                variables[index] = new Variable(getVar(tokens, k + 1), getTypes(tokens, k + 1));
                 index++;
             }
         }
@@ -126,7 +135,7 @@ public class Parser {
             } else if (thisToken.equals("#") && nextToken.equals("F_ARGS_END")) {
                 return arguments;
             } else if (thisToken.equals("@") && InArgs) {
-                arguments[index] = new Variable(tokens.get(k + 2), getTypes(tokens, k + 1));
+                arguments[index] = new Variable(getVar(tokens, k + 1), getTypes(tokens, k + 1));
                 index++;
             }
         }

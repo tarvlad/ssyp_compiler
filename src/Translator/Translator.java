@@ -179,37 +179,37 @@ public class Translator {
 
             case ARRAY_IN -> {
                 if (!getVarType(ins, 0, typeMap).equals("Array")) {
-                    System.out.println("Ошибка: У ARRAY_IN первый аргумент не является массивом.");
+                    System.out.println("Ошибка: У ARRAY_IN первый аргумент должен быть массивом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
-                    System.out.println("Ошибка: У ARRAY_IN второй аргумент не является числом.");
+                    System.out.println("Ошибка: У ARRAY_IN второй аргумент должен быть числом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 2, typeMap).equals("Int")) {
-                    System.out.println("Ошибка: У ARRAY_IN первый аргумент не является массивом.");
+                    System.out.println("Ошибка: У ARRAY_IN третий аргумент должен быть числом.");
                     throw new RuntimeException();
                 } else {
-                    new ArrayIn(getVarAddress(ins, 0, virtualStack, instructions),
+                    instructions.add(new ArrayIn(getVarAddress(ins, 0, virtualStack, instructions),
                             getVarAddress(ins, 1, virtualStack, instructions),
                             getVarAddress(ins, 2, virtualStack, instructions)
-                    );
+                    ));
                 }
             }
 
             case ARRAY_OUT -> {
                 if (!getVarType(ins, 0, typeMap).equals("Array")) {
-                    System.out.println("Ошибка: У ARRAY_OUT первый аргумент не является массивом.");
+                    System.out.println("Ошибка: У ARRAY_OUT первый аргумент должен быть массивом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
-                    System.out.println("Ошибка: У ARRAY_OUT второй аргумент не является числом.");
+                    System.out.println("Ошибка: У ARRAY_OUT второй аргумент должен быть числом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 2, typeMap).equals("Int")) {
-                    System.out.println("Ошибка: У ARRAY_OUT первый аргумент не является массивом.");
+                    System.out.println("Ошибка: У ARRAY_OUT третий аргумент долже быть числом.");
                     throw new RuntimeException();
                 } else {
-                    new ArrayOut(getVarAddress(ins, 0, virtualStack, instructions),
+                    instructions.add(new ArrayOut(getVarAddress(ins, 0, virtualStack, instructions),
                             getVarAddress(ins, 1, virtualStack, instructions),
                             getVarAddress(ins, 2, virtualStack, instructions)
-                    );
+                    ));
                 }
             }
         }
@@ -276,10 +276,10 @@ public class Translator {
         if (pos == -1) {
             virtualStack.add("#" + literal); // literals will have a # before them
             pos = (virtualStack.size()) - 1;
-          
+
             instructions.add(new Set(-pos, literal));
         }
-        
+
         return pos;
     }
 }

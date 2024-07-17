@@ -1,21 +1,24 @@
 #F_BEGIN;
-    #F_NAME power;
+    #F_NAME recursion;
+
     #F_ARGS_BEGIN;
         @Int x;
         @Int y;
     #F_ARGS_END;
+
     #F_VARS_BEGIN;
-        @Int t1;
-        @Int t2;
     #F_VARS_END;
+
     #F_BODY_BEGIN;
-        #IF < y #3;
+        #IF < y #0;
+            #* x x #2;
             #F_RETURN x;
         #ELSE;
+            #print #2;
             #- y y #1;
-            #power t1 x y;
-            #* x x t1;
-        #F_RETURN x;
+            #recursion x x y;
+            #* x x #2;
+            #F_RETURN x;
         #ENDIF;
     #F_BODY_END;
 #F_END;
@@ -23,12 +26,14 @@
 #F_BEGIN;
     #F_NAME main;
     #F_ARGS_BEGIN;
+
     #F_ARGS_END;
     #F_VARS_BEGIN;
         @Int x;
     #F_VARS_END;
+
     #F_BODY_BEGIN;
-        #power x #3 #5;
+        #recursion x #3 #3;
         #F_RETURN x;
     #F_BODY_END;
 #F_END;

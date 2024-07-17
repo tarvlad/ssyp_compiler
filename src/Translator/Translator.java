@@ -167,9 +167,9 @@ public class Translator {
             }
 
             case ELSE -> {
-                blocks.getLast().elseStart = Optional.of(instructions.size()); // TODO: check for correctness
                 instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
                 blocks.getLast().addJmpInfo(instructions.size() - 1);
+                blocks.getLast().elseStart = Optional.of(instructions.size() - 1); // TODO: check for correctness
             }
 
             case ENDIF -> {
@@ -188,7 +188,12 @@ public class Translator {
 
             // args must be flipped
             if (arg.getLeft().isPresent()) {
-                return -virtualStack.indexOf(arg.getLeft().get());
+                int adr = virtualStack.indexOf(arg.getLeft().get());
+                if (adr == -1) {
+                    System.out.printf("var %s is not found on stack\n", arg.getLeft().get());
+                    throw new RuntimeException();
+                }
+                return -adr;
             } else if (arg.getRight().isPresent()) {
                 Optional<Integer> lit = arg.getRight();
                 return -orCreateStack(lit.get(), virtualStack, instructions);
@@ -293,7 +298,7 @@ class Block {
         }
     }
 
-    void addJmpInfo( int instructionIndex) {
+    void addJmpInfo(int instructionIndex) {
         if (this.midJump.isEmpty()) {
             this.startJump = instructionIndex;
         } else {

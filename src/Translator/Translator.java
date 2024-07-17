@@ -160,16 +160,16 @@ public class Translator {
                     throw new RuntimeException();
                 });
 
+                blocks.getLast().mid.add(instructions.size() - 1);
+
                 instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
                 blocks.getLast().addJmpInfo(instructions.size() - 1);
-
-                blocks.getLast().mid.add(instructions.size() - 1);
             }
 
             case ELSE -> {
                 instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
                 blocks.getLast().addJmpInfo(instructions.size() - 1);
-                blocks.getLast().elseStart = Optional.of(instructions.size() - 1); // TODO: check for correctness
+                blocks.getLast().elseStart = Optional.of(instructions.size()); // TODO: check for correctness #2
             }
 
             case ENDIF -> {
@@ -238,9 +238,10 @@ public class Translator {
         if (pos == -1) {
             virtualStack.add(STR."#\{literal}"); // literals will have a # before them
             pos = (virtualStack.size()) - 1;
-
-            instructions.add(new Set(-pos, literal));
         }
+
+        // Could in the future bring constants to the top
+        instructions.add(new Set(-pos, literal));
 
         return pos;
     }

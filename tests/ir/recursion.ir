@@ -15,9 +15,9 @@
             #F_RETURN x;
         #ELSE;
             #print #2;
+            #* x x #2;
             #- y y #1;
             #recursion x x y;
-            #* x x #2;
             #F_RETURN x;
         #ENDIF;
     #F_BODY_END;

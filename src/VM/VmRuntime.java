@@ -67,7 +67,7 @@ public class VmRuntime {
 
         int previousStackBase = this.stackBase;
         this.stackBase += offset - 1; // advance by one from the free slot
-        this.currentInstruction = 0;
+        this.currentInstruction = -1; // instruction will get incremented back to 0 after this
 
         this.setStackAt(1, previousStackBase);
 

@@ -89,7 +89,7 @@ public class Translator {
 
                 if (arg2.isEmpty()) {
                     instructions.add(
-                            new Mov(getVarAddress(ins, 0, virtualStack, instructions),
+                            new Set(getVarAddress(ins, 0, virtualStack, instructions),
                                     ins.get(1).flatMap(Either::getRight).get()
                             )
                     );

@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class Translator {
-    public static BytecodeFile translate(Function[] functions, BytecodeFile file) {
+    public static void translate(Function[] functions, BytecodeFile file) {
         for (Function func : functions) {
             generateFunction(func, file);
         }
@@ -18,7 +18,13 @@ public class Translator {
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
 
-        return file;
+        file.add_func("print_array");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+
+        file.add_func("cprint_array");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
     }
 
     private static void generateFunction(Function func, BytecodeFile file) {
@@ -35,7 +41,7 @@ public class Translator {
         ArrayList<Block> block = new ArrayList<>();
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
 
-        for (Variable local: func.locals()) {
+        for (Variable local : func.locals()) {
             if (local.type()[0].equals("Array")) {
                 instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
             }

@@ -15,6 +15,8 @@ public class VmRuntime {
     private String currentFunctionName = "main";
     private int stackBase;
     private int currentInstruction = 0;
+    private int thisKey = 0;
+    private final HashMap<Integer, Integer[]> heap = new HashMap<>();
 
     VmRuntime(InputReader reader, int size, boolean isDebugging) {
         this.stack = new ArrayList<>(size + 1);
@@ -108,6 +110,20 @@ public class VmRuntime {
 
     public String getCurrentFunctionName() {
         return this.currentFunctionName;
+    }
+  
+    public int createNewArray(int size) {
+        heap.put(thisKey, new Integer[size]);
+        thisKey++;
+        return thisKey - 1;
+    }
+
+    public void updateArray(int key, int index, int value) {
+        heap.get(key)[index] = value;
+    }
+
+    public Integer[] getArray(int key) {
+        return heap.get(key);
     }
 
     public int getInstructionNumber() {

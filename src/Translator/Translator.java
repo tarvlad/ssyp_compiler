@@ -4,6 +4,7 @@ import Parsing.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -25,12 +26,23 @@ public class Translator {
         virtualStack.addAll(Arrays.stream(func.arguments()).map(Variable::name).toList());
         virtualStack.addAll(Arrays.stream(func.locals()).map(Variable::name).toList());
 
+        HashMap<String, String[]> typeMap = new HashMap<>();
+        Arrays.stream(func.arguments()).forEach(arg -> typeMap.put(arg.name(), arg.type()));
+        Arrays.stream(func.locals()).forEach(arg -> typeMap.put(arg.name(), arg.type()));
+
         file.add_func(func.name());
 
         ArrayList<Block> block = new ArrayList<>();
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
+
+        for (Variable local: func.locals()) {
+            if (local.type()[0].equals("Array")) {
+                instructions.add(new CreateArray(virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+            }
+        }
+
         for (Instruction ins : func.instructions()) {
-            generateInstruction(ins, block, instructions, virtualStack);
+            generateInstruction(ins, block, instructions, virtualStack, typeMap);
         }
 
         if (!block.isEmpty()) {
@@ -47,7 +59,7 @@ public class Translator {
         }
     }
 
-    private static void generateInstruction(Instruction ins, ArrayList<Block> blocks, ArrayList<BytecodeInstruction> instructions, ArrayList<String> virtualStack) {
+    private static void generateInstruction(Instruction ins, ArrayList<Block> blocks, ArrayList<BytecodeInstruction> instructions, ArrayList<String> virtualStack, HashMap<String, String[]> typeMap) {
         switch (ins.type()) {
             case ADD -> instructions.add(
                     new Add(getVarAddress(ins, 0, virtualStack, instructions),
@@ -74,27 +86,30 @@ public class Translator {
             );
 
             case ASSIGN -> {
-                Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack);
-                if (arg1.isEmpty()) {
-                    System.out.println();
-                    throw new RuntimeException();
-                }
+                if (getVarType(ins, 0, typeMap).equals("Int")) {
+                    Optional<Integer> arg1 = getVarOnlyAddress(ins, 0, virtualStack);
+                    if (arg1.isEmpty()) {
+                        System.out.println();
+                        throw new RuntimeException();
+                    }
 
-                Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
-                arg2.ifPresent(arg -> instructions.add(
-                        new Mov(arg1.get(),
-                                arg
-                        )
-                ));
-
-                if (arg2.isEmpty()) {
-                    instructions.add(
-                            new Set(getVarAddress(ins, 0, virtualStack, instructions),
-                                    ins.get(1).flatMap(Either::getRight).get()
+                    Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
+                    arg2.ifPresent(arg -> instructions.add(
+                            new Set(arg1.get(),
+                                    arg
                             )
-                    );
+                    ));
+
+                    if (arg2.isEmpty()) {
+                        instructions.add(
+                                new Mov(getVarAddress(ins, 0, virtualStack, instructions),
+                                        ins.get(1).flatMap(Either::getRight).get()
+                                )
+                        );
+                    }
                 }
             }
+
             case CALL -> {
                 Optional<Integer> returnArgsAddress = getVarOnlyAddress(ins, 0, virtualStack);
 
@@ -178,6 +193,51 @@ public class Translator {
                 blocks.getLast().fixJumps(instructions);
                 blocks.removeLast();
             }
+
+            case ARRAY_IN -> {
+                if (!getVarType(ins, 0, typeMap).equals("Array")) {
+                    System.out.println("Ошибка: У ARRAY_IN первый аргумент должен быть массивом.");
+                    throw new RuntimeException();
+                } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
+                    System.out.println("Ошибка: У ARRAY_IN второй аргумент должен быть числом.");
+                    throw new RuntimeException();
+                } else if (!getVarType(ins, 2, typeMap).equals("Int")) {
+                    System.out.println("Ошибка: У ARRAY_IN третий аргумент должен быть числом.");
+                    throw new RuntimeException();
+                } else {
+                    instructions.add(new ArrayIn(getVarAddress(ins, 0, virtualStack, instructions),
+                            getVarAddress(ins, 1, virtualStack, instructions),
+                            getVarAddress(ins, 2, virtualStack, instructions)
+                    ));
+                }
+            }
+
+            case ARRAY_OUT -> {
+                if (!getVarType(ins, 0, typeMap).equals("Array")) {
+                    System.out.println("Ошибка: У ARRAY_OUT первый аргумент должен быть массивом.");
+                    throw new RuntimeException();
+                } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
+                    System.out.println("Ошибка: У ARRAY_OUT второй аргумент должен быть числом.");
+                    throw new RuntimeException();
+                } else if (!getVarType(ins, 2, typeMap).equals("Int")) {
+                    System.out.println("Ошибка: У ARRAY_OUT третий аргумент долже быть числом.");
+                    throw new RuntimeException();
+                } else {
+                    instructions.add(new ArrayOut(getVarAddress(ins, 0, virtualStack, instructions),
+                            getVarAddress(ins, 1, virtualStack, instructions),
+                            getVarAddress(ins, 2, virtualStack, instructions)
+                    ));
+                }
+            }
+        }
+    }
+
+    private static String getVarType(Instruction ins, int index, HashMap<String, String[]> typeMap) {
+        Optional<Either<String, Integer>> var = ins.get(index);
+        if (var.isPresent() && var.get().getLeft().isPresent()) {
+            return typeMap.get(var.get().getLeft().get())[0];
+        } else {
+            return "Int";
         }
     }
 

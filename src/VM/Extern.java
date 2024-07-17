@@ -25,7 +25,7 @@ public class Extern implements Instruction {
     }
 
     @Override
-    public void println() {
+    public void println(VmRuntime stack) {
         System.out.println("EXTERN");
     }
 }

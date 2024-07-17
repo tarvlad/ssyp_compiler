@@ -10,17 +10,19 @@ public class VmRuntime {
     private final List<Pair<String, Integer>> callStack;
     private final int endInstruction = Integer.MAX_VALUE;
     private final HashMap<String, List<Instruction>> instructions = new HashMap<>();
+    private final boolean IsDebugging;
     private List<Instruction> currentInstructions;
     private String currentFunctionName = "main";
-
     private int stackBase;
     private int currentInstruction = 0;
     private int thisKey = 0;
     private final HashMap<Integer, Integer[]> heap = new HashMap<>();
 
-    VmRuntime(InputReader reader, int size) {
+    VmRuntime(InputReader reader, int size, boolean isDebugging) {
         this.stack = new ArrayList<>(size + 1);
         this.callStack = new ArrayList<>(size + 1);
+        this.IsDebugging = isDebugging;
+
 
         for (int i : IntStream.range(0, size + 1).toArray()) {
             this.stack.add(0);
@@ -46,6 +48,9 @@ public class VmRuntime {
     }
 
     private void runNext() {
+        if (this.IsDebugging)
+            this.currentInstructions.get(this.currentInstruction).println(this);
+
         this.currentInstructions.get(this.currentInstruction).execute(this);
         this.currentInstruction++;
     }
@@ -69,7 +74,7 @@ public class VmRuntime {
 
         int previousStackBase = this.stackBase;
         this.stackBase += offset - 1; // advance by one from the free slot
-        this.currentInstruction = 0;
+        this.currentInstruction = -1; // instruction will get incremented back to 0 after this
 
         this.setStackAt(1, previousStackBase);
 
@@ -82,7 +87,7 @@ public class VmRuntime {
             this.currentInstruction = this.currentInstructions.size();
             this.stackBase = this.stack.size() - 1;
 
-            System.out.println("out: " + obj);
+            System.out.println(STR."out: \{obj}");
         } else {
             this.callStack.removeLast(); // remove current function from stack
             this.currentInstruction = this.callStack.getLast().get1();
@@ -96,7 +101,7 @@ public class VmRuntime {
     }
 
     public void jumpBy(int offset) {
-        this.currentInstruction += offset;
+        this.currentInstruction = offset;
 
         assert Integer.signum(this.currentInstruction) == 1 && this.currentInstruction < this.currentInstructions.size();
 
@@ -106,7 +111,7 @@ public class VmRuntime {
     public String getCurrentFunctionName() {
         return this.currentFunctionName;
     }
-
+  
     public int createNewArray(int size) {
         heap.put(thisKey, new Integer[size]);
         thisKey++;
@@ -119,5 +124,9 @@ public class VmRuntime {
 
     public Integer[] getArray(int key) {
         return heap.get(key);
+    }
+
+    public int getInstructionNumber() {
+        return this.currentInstruction;
     }
 }

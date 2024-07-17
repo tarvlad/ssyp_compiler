@@ -35,7 +35,7 @@ public class Translator {
         ArrayList<Block> block = new ArrayList<>();
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
 
-        for (Variable local: func.locals()) {
+        for (Variable local : func.locals()) {
             if (local.type()[0].equals("Array")) {
                 instructions.add(new CreateArray(virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
             }
@@ -190,7 +190,7 @@ public class Translator {
             case ENDIF -> {
                 blocks.getLast().end = instructions.size(); // TODO: check for correctness
 
-                blocks.getLast().fixJumps(instructions);
+                blocks.getLast().fixIfJumps(instructions);
                 blocks.removeLast();
             }
 
@@ -228,6 +228,56 @@ public class Translator {
                             getVarAddress(ins, 2, virtualStack, instructions)
                     ));
                 }
+            }
+            case WHILE_BEGIN -> {
+                ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
+                        new Jump(CompareTypes.fromSymbol(cmpType).invert(),
+                                getVarAddress(ins, 1, virtualStack, instructions),
+                                getVarAddress(ins, 2, virtualStack, instructions),
+                                Integer.MAX_VALUE
+                        )
+                ), () -> {
+                    System.out.println("While should have a cmp operand");
+                    throw new RuntimeException();
+                });
+
+                blocks.add(new Block(instructions.size() - 1));
+            }
+
+            case WHILE_END -> {
+                blocks.getLast().end = instructions.size();
+                blocks.getLast().fixWhileJumps(instructions);
+                blocks.removeLast();
+            }
+
+            case BREAK -> {
+                ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
+                        new Jump(CompareTypes.NoCmp,
+                                0,
+                                0,
+                                Integer.MAX_VALUE
+                        )
+                ), () -> {
+                    System.out.println("While should have a cmp operand");
+                    throw new RuntimeException();
+                });
+
+                blocks.getLast().breaks.add(instructions.size() - 1);
+            }
+
+            case CONTINUE -> {
+                ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
+                        new Jump(CompareTypes.NoCmp,
+                                0,
+                                0,
+                                Integer.MAX_VALUE
+                        )
+                ), () -> {
+                    System.out.println("While should have a cmp operand");
+                    throw new RuntimeException();
+                });
+
+                blocks.getLast().continues.add(instructions.size() - 1);
             }
         }
     }
@@ -314,6 +364,9 @@ class Block {
     ArrayList<Integer> midJump;
     Optional<Integer> elseStart;
     int end;
+    ArrayList<Integer> breaks;
+    ArrayList<Integer> continues;
+
 
     Block(int start) {
         this.start = start;
@@ -321,9 +374,11 @@ class Block {
         this.midJump = new ArrayList<>();
         this.end = Integer.MAX_VALUE;
         this.elseStart = Optional.empty();
+        this.breaks = new ArrayList<>();
+        this.continues = new ArrayList<>();
     }
 
-    public void fixJumps(ArrayList<BytecodeInstruction> instructions) {
+    public void fixIfJumps(ArrayList<BytecodeInstruction> instructions) {
         assert this.end != Integer.MAX_VALUE;
 
         if (instructions.get(this.start) instanceof Jump) {
@@ -364,6 +419,35 @@ class Block {
             this.startJump = instructionIndex;
         } else {
             midJump.add(instructionIndex);
+        }
+    }
+
+    public void fixWhileJumps(ArrayList<BytecodeInstruction> instructions) {
+        assert this.end != Integer.MAX_VALUE;
+
+        if (instructions.get(this.start) instanceof Jump) {
+            ((Jump) instructions.get(this.start)).setJumpDestination(this.end);
+        } else {
+            System.out.println("invalid while jmp instruction at index");
+            throw new RuntimeException();
+        }
+
+        for (int i : this.breaks) {
+            if (instructions.get(i) instanceof Jump) {
+                ((Jump) instructions.get(i)).setJumpDestination(this.end + 1);
+            } else {
+                System.out.println("invalid else if jmp instruction at index");
+                throw new RuntimeException();
+            }
+        }
+
+        for (int i : this.continues) {
+            if (instructions.get(i) instanceof Jump) {
+                ((Jump) instructions.get(i)).setJumpDestination(this.end);
+            } else {
+                System.out.println("invalid else if jmp instruction at index");
+                throw new RuntimeException();
+            }
         }
     }
 }

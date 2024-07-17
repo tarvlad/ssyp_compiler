@@ -20,7 +20,7 @@ public class ArrayIn implements Instruction{
     }
 
     @Override
-    public void println() {
+    public void println(VmRuntime runtime) {
         System.out.println("ARRAY_IN");
     }
 }

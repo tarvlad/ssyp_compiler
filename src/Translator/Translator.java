@@ -37,7 +37,7 @@ public class Translator {
 
         for (Variable local: func.locals()) {
             if (local.type()[0].equals("Array")) {
-                instructions.add(new CreateArray(virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
             }
         }
 

@@ -14,11 +14,11 @@ public class ArrayOut implements Instruction {
     public void execute(VmRuntime runtime) {
         runtime.setStackAt(
                 this.var,
-                runtime.getArray(this.arrayOffset)[runtime.stackAt(this.index)]);
+                runtime.getArray(runtime.stackAt(this.arrayOffset))[runtime.stackAt(this.index)]);
     }
 
     @Override
-    public void println() {
+    public void println(VmRuntime runtime) {
         System.out.println("ARRAY_OUT");
     }
 }

@@ -37,7 +37,7 @@ public class Translator {
 
         for (Variable local : func.locals()) {
             if (local.type()[0].equals("Array")) {
-                instructions.add(new CreateArray(virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
             }
         }
 
@@ -249,7 +249,7 @@ public class Translator {
                 blocks.getLast().fixWhileJumps(instructions);
                 blocks.removeLast();
             }
-
+            
             case BREAK -> {
                 ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
                         new Jump(CompareTypes.NoCmp,

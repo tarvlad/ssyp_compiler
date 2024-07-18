@@ -14,6 +14,8 @@ public class ArrayOut implements Instruction {
 
     @Override
     public void execute(VmRuntime runtime) {
+        assert runtime.getArray(runtime.stackAt(this.arrayOffset)).length > runtime.stackAt(this.indexOffset);
+
         runtime.setStackAt(
                 this.varOffset,
                 runtime.getArray(runtime.stackAt(this.arrayOffset))[runtime.stackAt(this.indexOffset)]);

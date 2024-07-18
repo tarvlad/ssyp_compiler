@@ -95,14 +95,12 @@ public class Translator {
 
                     Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
                     arg2.ifPresent(arg -> instructions.add(
-                            new Set(arg1.get(),
-                                    arg
-                            )
+                            new Mov(arg, arg1.get())
                     ));
 
                     if (arg2.isEmpty()) {
                         instructions.add(
-                                new Mov(getVarAddress(ins, 0, virtualStack, instructions),
+                                new Set(getVarAddress(ins, 0, virtualStack, instructions),
                                         ins.get(1).flatMap(Either::getRight).get()
                                 )
                         );
@@ -160,7 +158,7 @@ public class Translator {
                     throw new RuntimeException();
                 });
 
-                blocks.add(new Block(instructions.size() - 1));
+                blocks.add(new Block(instructions.size() - 1, true));
             }
 
             case ELIF -> {
@@ -175,22 +173,27 @@ public class Translator {
                     throw new RuntimeException();
                 });
 
-                blocks.getLast().mid.add(instructions.size() - 1);
+                Block.LastIf(blocks).mid.add(instructions.size() - 1);
 
                 instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
-                blocks.getLast().addJmpInfo(instructions.size() - 1);
+                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
             }
 
             case ELSE -> {
                 instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
-                blocks.getLast().addJmpInfo(instructions.size() - 1);
-                blocks.getLast().elseStart = Optional.of(instructions.size()); // TODO: check for correctness #2
+                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
+                Block.LastIf(blocks).elseStart = Optional.of(instructions.size()); // TODO: check for correctness #2
             }
 
             case ENDIF -> {
-                blocks.getLast().end = instructions.size(); // TODO: check for correctness
+                if (Block.LastIf(blocks).startJump == Integer.MAX_VALUE) {
+                    instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
+                    Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
+                }
 
-                blocks.getLast().fixIfJumps(instructions);
+                Block.LastIf(blocks).end = instructions.size(); // TODO: check for correctness
+
+                Block.LastIf(blocks).fixIfJumps(instructions);
                 blocks.removeLast();
             }
 
@@ -241,43 +244,47 @@ public class Translator {
                     throw new RuntimeException();
                 });
 
-                blocks.add(new Block(instructions.size() - 1));
+                blocks.add(new Block(instructions.size() - 1, false));
             }
 
             case WHILE_END -> {
                 blocks.getLast().end = instructions.size();
                 blocks.getLast().fixWhileJumps(instructions);
+                instructions.add(
+                        new Jump(CompareTypes.NoCmp,
+                                0,
+                                0,
+                                Block.LastWhile(blocks).start
+                        )
+                );
                 blocks.removeLast();
             }
-            
+
             case BREAK -> {
-                ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
+                instructions.add(
                         new Jump(CompareTypes.NoCmp,
                                 0,
                                 0,
                                 Integer.MAX_VALUE
                         )
-                ), () -> {
-                    System.out.println("While should have a cmp operand");
-                    throw new RuntimeException();
-                });
+                );
 
-                blocks.getLast().breaks.add(instructions.size() - 1);
+                assert Block.LastWhile(blocks) != null;
+                Block.LastWhile(blocks)
+                        .breaks.add(instructions.size() - 1);
             }
 
             case CONTINUE -> {
-                ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
+                instructions.add(
                         new Jump(CompareTypes.NoCmp,
                                 0,
                                 0,
                                 Integer.MAX_VALUE
                         )
-                ), () -> {
-                    System.out.println("While should have a cmp operand");
-                    throw new RuntimeException();
-                });
+                );
 
-                blocks.getLast().continues.add(instructions.size() - 1);
+                assert Block.LastWhile(blocks) != null;
+                Block.LastWhile(blocks).continues.add(instructions.size() - 1);
             }
         }
     }
@@ -358,6 +365,7 @@ public class Translator {
 }
 
 class Block {
+    boolean IsIfBlock;
     int start;
     int startJump;
     ArrayList<Integer> mid;
@@ -368,8 +376,10 @@ class Block {
     ArrayList<Integer> continues;
 
 
-    Block(int start) {
+    Block(int start, boolean IsIfBlock) {
+        this.IsIfBlock = IsIfBlock;
         this.start = start;
+        this.startJump = Integer.MAX_VALUE;
         this.mid = new ArrayList<>();
         this.midJump = new ArrayList<>();
         this.end = Integer.MAX_VALUE;
@@ -380,6 +390,7 @@ class Block {
 
     public void fixIfJumps(ArrayList<BytecodeInstruction> instructions) {
         assert this.end != Integer.MAX_VALUE;
+        assert this.IsIfBlock;
 
         if (instructions.get(this.start) instanceof Jump) {
             ((Jump) instructions.get(this.start)).setJumpDestination(this.mid.isEmpty() ? this.elseStart.orElseGet(() -> this.end) : this.mid.getFirst());
@@ -414,19 +425,12 @@ class Block {
         }
     }
 
-    void addJmpInfo(int instructionIndex) {
-        if (this.midJump.isEmpty()) {
-            this.startJump = instructionIndex;
-        } else {
-            midJump.add(instructionIndex);
-        }
-    }
-
     public void fixWhileJumps(ArrayList<BytecodeInstruction> instructions) {
         assert this.end != Integer.MAX_VALUE;
+        assert !this.IsIfBlock;
 
         if (instructions.get(this.start) instanceof Jump) {
-            ((Jump) instructions.get(this.start)).setJumpDestination(this.end);
+            ((Jump) instructions.get(this.start)).setJumpDestination(this.end + 1);
         } else {
             System.out.println("invalid while jmp instruction at index");
             throw new RuntimeException();
@@ -436,7 +440,7 @@ class Block {
             if (instructions.get(i) instanceof Jump) {
                 ((Jump) instructions.get(i)).setJumpDestination(this.end + 1);
             } else {
-                System.out.println("invalid else if jmp instruction at index");
+                System.out.println("invalid break jmp instruction at index");
                 throw new RuntimeException();
             }
         }
@@ -445,9 +449,37 @@ class Block {
             if (instructions.get(i) instanceof Jump) {
                 ((Jump) instructions.get(i)).setJumpDestination(this.end);
             } else {
-                System.out.println("invalid else if jmp instruction at index");
+                System.out.println("invalid continue jmp instruction at index");
                 throw new RuntimeException();
             }
         }
+    }
+
+    void addJmpInfo(int instructionIndex) {
+        if (this.midJump.isEmpty()) {
+            this.startJump = instructionIndex;
+        } else {
+            midJump.add(instructionIndex);
+        }
+    }
+
+    static Block LastWhile(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (!blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
+    }
+
+    static Block LastIf(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
     }
 }

@@ -81,8 +81,20 @@ public class Translator {
                         -orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
                 );
 
-            } else if (local.type()[0].equals("Array") && typeMap.getOrDefault(local.type()[1], new String[2])[0].equals("Array")) {
-                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
+            } else if (local.type()[0].equals("Array")
+                    && Arrays.stream(func.arguments()).anyMatch(arg -> arg.type()[0].equals("Array") && arg.name().equals(local.type()[1]))) {
+
+                int lenPos = -virtualStack.indexOf(STR."#\{local.type()[1]}");
+                if (lenPos == 1) {
+                    virtualStack.add(STR."#\{local.type()[1]}");
+                    lenPos = -(virtualStack.size() - 1);
+                }
+
+                // get size of args array
+                instructions.add(new Call("len", -virtualStack.size()));
+                instructions.add(new Mov(-virtualStack.size(), lenPos));
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), lenPos));
             } else if (local.type()[0].equals("Array")) {
                 if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {
                     System.out.println(STR."var \{local.type()[1]} doesn't exists in arguements");

@@ -16,7 +16,7 @@ public class VmRuntime {
     private String currentFunctionName = "main";
     private int stackBase;
     private int currentInstruction = 0;
-    private int thisKey = 0;
+    private int thisKey = 1;
 
     VmRuntime(InputReader reader, int size, boolean isDebugging) {
         this.stack = new ArrayList<>(size + 1);

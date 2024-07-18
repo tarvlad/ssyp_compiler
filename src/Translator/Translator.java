@@ -69,7 +69,6 @@ public class Translator {
             }
         }
 
-
         for (Variable local : func.locals()) {
             if (local.type().length < 2) {
                 continue;

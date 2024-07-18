@@ -286,6 +286,33 @@ public class Translator {
                 assert Block.LastWhile(blocks) != null;
                 Block.LastWhile(blocks).continues.add(instructions.size() - 1);
             }
+
+            case FOR -> {
+                if (ins.get(0).isPresent() ) {
+                    if (ins.get(0).get().getLeft().isPresent()) {
+                        String elm = ins.get(0).get().getLeft().get();
+                    } else {
+                        throw new RuntimeException();
+                    }
+                } else {
+                    throw new RuntimeException();
+                }
+                if (ins.get(1).isPresent()) {
+                    if (ins.get(1).get().getLeft().isPresent()) {
+                        if (!ins.get(1).get().getLeft().equals("IN")) {
+                            System.out.println("Отсутствует IN в FOR.");
+                            throw new RuntimeException();
+                        }
+                    } else {
+                        throw new RuntimeException();
+                    }
+                } else {
+                    throw new RuntimeException();
+                }
+                if (!(ins.get(2).isPresent() || ins.get(2).get().getLeft().isPresent())) {
+                    throw new RuntimeException();
+                }
+            }
         }
     }
 

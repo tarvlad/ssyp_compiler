@@ -23,6 +23,6 @@ public class ArrayOut implements Instruction {
 
     @Override
     public void println(VmRuntime runtime) {
-        System.out.printf("ARRAY_OUT: $%d = %s[%d]\n", this.var, Arrays.toString(runtime.getArray(this.arrayOffset)), runtime.stackAt(this.index));
+        System.out.printf("ARRAY_OUT: $%d = %s[%d]\n", this.varOffset, Arrays.toString(runtime.getArray(this.arrayOffset)), runtime.stackAt(this.indexOffset));
     }
 }

@@ -299,7 +299,7 @@ public class Translator {
                 }
                 if (ins.get(1).isPresent()) {
                     if (ins.get(1).get().getLeft().isPresent()) {
-                        if (!ins.get(1).get().getLeft().equals("IN")) {
+                        if (!ins.get(1).get().getLeft().get().equals("IN")) {
                             System.out.println("Отсутствует IN в FOR.");
                             throw new RuntimeException();
                         }

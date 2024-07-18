@@ -42,8 +42,17 @@ public class Translator {
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
 
         for (Variable local : func.locals()) {
-            if (local.type()[0].equals("Array")) {
-                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+            if (local.type()[0].equals("Array") && local.type()[1].equals("#")) {
+                instructions.add(new CreateArray(
+                        -virtualStack.indexOf(local.name()),
+                        orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
+                );
+            } else if (local.type()[0].equals("Array")) {
+                if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {
+                    System.out.println(STR."var \{local.type()[1]} doesn't exists in arguements");
+                }
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
             }
         }
 

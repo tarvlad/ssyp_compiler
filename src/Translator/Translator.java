@@ -101,18 +101,21 @@ public class Translator {
 
                     Optional<Integer> arg2 = getVarOnlyAddress(ins, 1, virtualStack);
                     arg2.ifPresent(arg -> instructions.add(
-                            new Set(arg1.get(),
+                            new Mov(arg1.get(),
                                     arg
                             )
                     ));
 
                     if (arg2.isEmpty()) {
                         instructions.add(
-                                new Mov(getVarAddress(ins, 0, virtualStack, instructions),
+                                new Set(getVarAddress(ins, 0, virtualStack, instructions),
                                         ins.get(1).flatMap(Either::getRight).get()
                                 )
                         );
                     }
+                } else {
+                    System.out.println("cannot assign arrays");
+                    throw new RuntimeException();
                 }
             }
 

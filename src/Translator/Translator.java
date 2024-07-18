@@ -88,11 +88,11 @@ public class Translator {
                 if (lenPos == 1) {
                     virtualStack.add(STR."#\{local.type()[1]}");
                     lenPos = -(virtualStack.size() - 1);
-                }
 
-                // get size of args array
-                instructions.add(new Call("len", -virtualStack.size()));
-                instructions.add(new Mov(-virtualStack.size(), lenPos));
+                    // get size of args array
+                    instructions.add(new Call("len", -virtualStack.size()));
+                    instructions.add(new Mov(-virtualStack.size(), lenPos));
+                }
 
                 instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), lenPos));
             } else if (local.type()[0].equals("Array")) {

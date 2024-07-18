@@ -45,7 +45,7 @@ public class Translator {
             if (local.type()[0].equals("Array") && local.type()[1].equals("#")) {
                 instructions.add(new CreateArray(
                         -virtualStack.indexOf(local.name()),
-                        orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
+                        -orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
                 );
             } else if (local.type()[0].equals("Array")) {
                 if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {

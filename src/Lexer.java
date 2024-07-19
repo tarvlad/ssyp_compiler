@@ -3,56 +3,88 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Lexer {
+
     public static List<String> tokenize(String input) {
-        List <String> tokens = new ArrayList<>();
-        List<String> splitSLines = getSplitBySpc(input);
+        List<String> keywords = Arrays.stream(new String[]{"#", "@", "\"", ";"}).toList();
+        List<String> space = Arrays.stream(new String[]{" ", "\n", "\r"}).toList();
+        List<String> tokens = new ArrayList<>();
 
-        for (String elem : splitSLines) {
-            boolean startsWSpec = elem.charAt(0) == '#' || elem.charAt(0) == '@';
-            int lastIdx = elem.length() - 1;
+        LexerState state = LexerState.LEXING;
+        int currentChar = 0;
+        StringBuilder builder = new StringBuilder();
+        while (currentChar < input.length()) {
+            switch (state) {
+                case STRING -> {
+                    builder = new StringBuilder();
 
-            if (startsWSpec && elem.charAt(lastIdx) == ';') {
-                tokens.add(String.valueOf(elem.charAt(0)));
-                tokens.add(elem.substring(1, lastIdx));
-                tokens.add(String.valueOf(elem.charAt(lastIdx)));
+                    while (currentChar < input.length()) {
+                        if (input.startsWith("\\\"", currentChar)) {
+                            currentChar += 2;
+                            builder.append("\\\"");
+                        } else if (input.startsWith("\"", currentChar)) {
+                            currentChar++;
+                            break;
+                        } else {
+                            builder.append(input.charAt(currentChar));
+                            currentChar++;
+                        }
+                    }
 
-            } else if (startsWSpec) {
-                tokens.add(String.valueOf(elem.charAt(0)));
-                tokens.add(elem.substring(1));
+                    tokens.add("\"");
+                    tokens.add(builder.toString());
+                    tokens.add("\"");
 
-            } else if (elem.charAt(lastIdx) == ';') {
-                tokens.add(elem.substring(0, lastIdx));
-                tokens.add(String.valueOf(elem.charAt(lastIdx)));
+                    state = LexerState.LEXING;
+                }
+                case LEXING -> {
+                    builder = new StringBuilder();
+                    while (currentChar < input.length()) {
+                        if (input.startsWith("//", currentChar)) {
+                            tokens.add(builder.toString());
 
-            } else {
-                tokens.add(elem);
+                            currentChar += 2;
+                            state = LexerState.COMMENT;
+                            break;
+                        } else if (space.contains(STR."\{input.charAt(currentChar)}")) {
+                            if (!builder.isEmpty()) {
+                                tokens.add(builder.toString());
+                            }
+
+                            currentChar++;
+                            break;
+                        } else if (keywords.contains(STR."\{input.charAt(currentChar)}")) {
+                            if (input.charAt(currentChar) == '\"') {
+                                state = LexerState.STRING;
+                            }
+
+                            if (!builder.isEmpty()) {
+                                tokens.add(builder.toString());
+                            }
+                            tokens.add(STR."\{input.charAt(currentChar)}");
+
+                            currentChar++;
+                            break;
+                        } else {
+                            builder.append(input.charAt(currentChar++));
+                        }
+                    }
+
+                }
+                case COMMENT -> {
+                    for (; input.charAt(currentChar) != '\n'; currentChar++) {
+                    }
+                    state = LexerState.LEXING;
+                }
             }
         }
+
         return tokens;
     }
 
-    private static List<String> getSplitBySpc(String input) {
-        assert !input.contains("\t");
-
-        String splitBySemicolon = input
-                .replace("\r", "")
-                .replace("\n", "")
-                .replace(";", "; ");
-        List <String> splitSLines = new ArrayList<>(List.of(splitBySemicolon.split(" ")));
-
-        int size = splitSLines.size();
-        for (int i = 0; i < size; ++i) {
-            if (splitSLines.get(i).isEmpty()) {
-                splitSLines.remove(i);
-                --i;
-            }
-            size = splitSLines.size();
-        }
-        return splitSLines;
-    }
 
     public static List<String> tokenizeFromFile(String filename) {
         try {
@@ -65,6 +97,8 @@ public class Lexer {
 }
 
 
-
-
-
+enum LexerState {
+    STRING,
+    LEXING,
+    COMMENT,
+}

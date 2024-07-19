@@ -34,7 +34,11 @@ public class Test {
 
     static void runIr(String pathToFile) {
         List<String> tokens = Lexer.tokenizeFromFile(pathToFile);
-      
+
+        for (String tk : tokens) {
+            System.out.println(STR."\n\{tk}");
+        }
+
         Parser parser = new Parser(tokens);
         Function[] functions = parser.getFunctions();
         for (Function function : functions) {
@@ -52,6 +56,6 @@ public class Test {
     }
 
     static void runByteCode(String pathToFile) {
-        VM.main(new String[]{ pathToFile });
+        VM.main(new String[]{pathToFile});
     }
 }

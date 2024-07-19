@@ -1,5 +1,5 @@
 #F_BEGIN;
-    #F_NAME fib;
+    #F_NAME main;
     #F_ARGS_BEGIN;
         @Int n;
     #F_ARGS_END;
@@ -9,8 +9,10 @@
         @Int step;
         @Int help_step;
         @Int k;
+        @Int фы;
     #F_VARS_END;
     #F_BODY_BEGIN;
+    #= step #20;
         #= step #1;
         #= step-2 #0;
         #= step-1 #1;

@@ -227,6 +227,9 @@ public class Translator {
             }
 
             case ELIF -> {
+                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
+                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
+
                 ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
                         new Jump(CompareTypes.fromSymbol(cmpType).invert(),
                                 getVarAddress(ins, 1, virtualStack, instructions),
@@ -239,9 +242,6 @@ public class Translator {
                 });
 
                 Block.LastIf(blocks).mid.add(instructions.size() - 1);
-
-                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
-                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
             }
 
             case ELSE -> {

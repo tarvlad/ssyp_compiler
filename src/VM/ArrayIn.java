@@ -26,6 +26,6 @@ public class ArrayIn implements Instruction {
 
     @Override
     public void println(VmRuntime runtime) {
-        System.out.printf("ARRAY_IN: %s[%d] = %d\n", Arrays.toString(runtime.getArray(this.arrayOffset)), runtime.stackAt(this.arrayOffset), runtime.stackAt(this.value));
+        System.out.printf("ARRAY_IN: %s[%d] = %d\n", Arrays.toString(runtime.getArray(this.arrayOffset)), runtime.stackAt(this.indexOffset), runtime.stackAt(this.value));
     }
 }

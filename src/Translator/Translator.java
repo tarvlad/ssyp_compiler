@@ -2,10 +2,7 @@ package Translator;
 
 import Parsing.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class Translator {
@@ -27,6 +24,10 @@ public class Translator {
         file.add_instructions(new Return(0));
 
         file.add_func("len");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+      
+        file.add_func("range");
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
     }
@@ -69,7 +70,6 @@ public class Translator {
             }
         }
 
-
         for (Variable local : func.locals()) {
             if (local.type().length < 2) {
                 continue;
@@ -81,8 +81,23 @@ public class Translator {
                         -orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
                 );
 
-            } else if (local.type()[0].equals("Array") && typeMap.getOrDefault(local.type()[1], new String[2])[0].equals("Array")) {
-                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
+            } else if (local.type()[0].equals("Array")
+                    && Arrays.stream(func.arguments()).anyMatch(arg -> arg.type()[0].equals("Array") && arg.name().equals(local.type()[1]))) {
+
+                int lenPos = -virtualStack.indexOf(STR."#\{local.type()[1]}");
+                if (lenPos == 1) {
+                    virtualStack.add(STR."#\{local.type()[1]}");
+                    lenPos = -(virtualStack.size() - 1);
+
+                    long argIndex = Arrays.stream(func.arguments()).takeWhile(arg -> arg.type()[0].equals("Array") && arg.name().equals(local.type()[1])).count() - 1;
+
+                    // get size of args array
+                    instructions.add(new Mov(-(int) argIndex, -(virtualStack.size() + 1)));
+                    instructions.add(new Call("len", -virtualStack.size()));
+                    instructions.add(new Mov(-virtualStack.size(), lenPos));
+                }
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), lenPos));
             } else if (local.type()[0].equals("Array")) {
                 if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {
                     System.out.println(STR."var \{local.type()[1]} doesn't exists in arguements");
@@ -216,6 +231,9 @@ public class Translator {
             }
 
             case ELIF -> {
+                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
+                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
+
                 ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
                         new Jump(CompareTypes.fromSymbol(cmpType).invert(),
                                 getVarAddress(ins, 1, virtualStack, instructions),
@@ -228,9 +246,6 @@ public class Translator {
                 });
 
                 Block.LastIf(blocks).mid.add(instructions.size() - 1);
-
-                instructions.add(new Jump(CompareTypes.NoCmp, 0, 0, 0));
-                Block.LastIf(blocks).addJmpInfo(instructions.size() - 1);
             }
 
             case ELSE -> {
@@ -286,6 +301,7 @@ public class Translator {
                     ));
                 }
             }
+
             case WHILE_BEGIN -> {
                 ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
                         new Jump(CompareTypes.fromSymbol(cmpType).invert(),
@@ -301,7 +317,7 @@ public class Translator {
                 blocks.add(new Block(instructions.size() - 1, false));
             }
 
-            case WHILE_END -> {
+            case WHILE_END, FOR_END -> {
                 blocks.getLast().end = instructions.size();
                 blocks.getLast().fixWhileJumps(instructions);
                 instructions.add(
@@ -339,6 +355,80 @@ public class Translator {
 
                 assert Block.LastWhile(blocks) != null;
                 Block.LastWhile(blocks).continues.add(instructions.size() - 1);
+            }
+
+            case FOR -> {
+                // Для Optional
+                if (ins.get(0).isPresent()) {
+                    if (ins.get(0).get().getLeft().isEmpty()) {
+                        throw new RuntimeException();
+                    }
+                } else {
+                    throw new RuntimeException();
+                }
+                if (ins.get(1).isPresent()) {
+                    if (ins.get(1).get().getLeft().isPresent()) {
+                        if (!ins.get(1).get().getLeft().get().equals("IN")) {
+                            System.out.println("Отсутствует IN в FOR.");
+                            throw new RuntimeException();
+                        }
+                    } else {
+                        throw new RuntimeException();
+                    }
+                } else {
+                    throw new RuntimeException();
+                }
+                if (!(ins.get(2).isPresent() || ins.get(2).get().getLeft().isPresent())) {
+                    throw new RuntimeException();
+                }
+                // SETЫ
+                String var_name = STR."##\{virtualStack.size()}";
+                if (!virtualStack.contains(var_name)) {
+                    virtualStack.add(var_name);
+                    instructions.add(new Set(
+                                    -virtualStack.indexOf(var_name),
+                                    0
+                            )
+                    );
+                }
+                if (!virtualStack.contains("##ONE")) {
+                    virtualStack.add("##ONE");
+                }
+                instructions.add(new Set(
+                        -virtualStack.indexOf("##ONE"),
+                        1
+                ));
+                String array_length_name = STR."##\{ins.get(2).get().getLeft().get()}_LENGTH";
+                if (!virtualStack.contains(array_length_name)) {
+                    virtualStack.add(array_length_name);
+                }
+
+                instructions.add(new Mov(-virtualStack.indexOf(ins.get(2).get().getLeft().get()), -(virtualStack.size() + 1)));
+                instructions.add(new Call("len", -virtualStack.size()));
+                instructions.add(new Mov(-virtualStack.size(), -virtualStack.indexOf(array_length_name)));
+
+                Collections.addAll(virtualStack, "#", "#");
+                // WHILE + ADD + ARRAY_OUT
+                instructions.add(
+                        new Jump(CompareTypes.GreaterEqual,
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(array_length_name),
+                                Integer.MAX_VALUE
+                        )
+                );
+                blocks.add(new Block(instructions.size() - 1, false));
+                instructions.add(
+                        new ArrayOut(-virtualStack.indexOf(ins.get(2).get().getLeft().get()),
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(ins.get(0).get().getLeft().get())
+                        )
+                );
+                instructions.add(
+                        new Add(-virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf("##ONE")
+                        )
+                );
             }
         }
     }
@@ -437,6 +527,26 @@ class Block {
         this.continues = new ArrayList<>();
     }
 
+    static Block LastWhile(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (!blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
+    }
+
+    static Block LastIf(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
+    }
+
     public void fixIfJumps(ArrayList<BytecodeInstruction> instructions) {
         assert this.end != Integer.MAX_VALUE;
         assert this.IsIfBlock;
@@ -510,25 +620,5 @@ class Block {
         } else {
             midJump.add(instructionIndex);
         }
-    }
-
-    static Block LastWhile(ArrayList<Block> blocks) {
-        for (int i = blocks.size() - 1; i > -1; i--) {
-            if (!blocks.get(i).IsIfBlock)
-                return blocks.get(i);
-        }
-
-        assert false;
-        return blocks.getFirst();
-    }
-
-    static Block LastIf(ArrayList<Block> blocks) {
-        for (int i = blocks.size() - 1; i > -1; i--) {
-            if (blocks.get(i).IsIfBlock)
-                return blocks.get(i);
-        }
-
-        assert false;
-        return blocks.getFirst();
     }
 }

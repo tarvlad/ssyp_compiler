@@ -5,7 +5,7 @@
         @Int y;
     #F_ARGS_END;
     #F_VARS_BEGIN;
-        @Array 3 Int United;
+        @Array #3 Int United;
         @Int t1;
         @Int t2;
     #F_VARS_END;
@@ -16,7 +16,7 @@
         #[] United #1 #7;
         #[] United #2 #4;
         #][ United #2 x;
-        #print_array #1 United;
+        #print_array #1 United United;
         #F_RETURN x;
     #F_BODY_END;
 #F_END;

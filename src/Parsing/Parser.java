@@ -177,6 +177,8 @@ public class Parser {
             case "ENDWHILE" -> InstructionType.WHILE_END;
             case "BREAK" -> InstructionType.BREAK;
             case "CONTINUE" -> InstructionType.CONTINUE;
+            case "FOR" -> InstructionType.FOR;
+            case "ENDFOR" -> InstructionType.FOR_END;
             default -> InstructionType.CALL;
         };
     }

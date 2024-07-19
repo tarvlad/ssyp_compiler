@@ -33,7 +33,7 @@
         @Int x;
     #F_VARS_END;
     #F_BODY_BEGIN;
-        #power x #3 #3;
+        #power x #5 #3;
         #F_RETURN x;
     #F_BODY_END;
 #F_END;

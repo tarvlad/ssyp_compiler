@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Translator {
-    public static BytecodeFile translate(Function[] functions, BytecodeFile file) {
+    public static void translate(Function[] functions, BytecodeFile file) {
         for (Function func : functions) {
             generateFunction(func, file);
         }
@@ -15,7 +15,17 @@ public class Translator {
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
 
-        return file;
+        file.add_func("print_array");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+
+        file.add_func("cprint_array");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+
+        file.add_func("len");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
     }
 
     private static void generateFunction(Function func, BytecodeFile file) {
@@ -32,9 +42,61 @@ public class Translator {
         ArrayList<Block> block = new ArrayList<>();
         ArrayList<BytecodeInstruction> instructions = new ArrayList<>();
 
+        for (Instruction ins : func.instructions()) {
+            for (int i = 0; ins.get(i).isPresent(); i++) {
+                if (ins.get(i).get().getRight().isEmpty()) {
+                    continue;
+                }
+
+                String lit = STR."#\{ins.get(i).get().getRight().get()}";
+                if (!virtualStack.contains(lit)) {
+                    virtualStack.add(lit); // literals will have a # before them
+                    instructions.add(new Set(-(virtualStack.size() - 1), ins.get(i).get().getRight().get()));
+                }
+            }
+        }
+
         for (Variable local : func.locals()) {
-            if (local.type()[0].equals("Array")) {
-                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), Integer.parseInt(local.type()[1])));
+            if (local.type()[0].equals("Array") && local.type()[1].equals("#")) {
+                String lit = STR."#\{local.type()[2]}";
+                if (!virtualStack.contains(lit)) {
+                    virtualStack.add(lit); // literals will have a # before them
+                    instructions.add(new Set(-(virtualStack.size() - 1), Integer.parseInt(local.type()[2])));
+                }
+            }
+        }
+
+        for (Variable local : func.locals()) {
+            if (local.type().length < 2) {
+                continue;
+            }
+
+            if (local.type()[0].equals("Array") && local.type()[1].equals("#")) {
+                instructions.add(new CreateArray(
+                        -virtualStack.indexOf(local.name()),
+                        -orCreateStack(Integer.parseInt(local.type()[2]), virtualStack, instructions))
+                );
+
+            } else if (local.type()[0].equals("Array")
+                    && Arrays.stream(func.arguments()).anyMatch(arg -> arg.type()[0].equals("Array") && arg.name().equals(local.type()[1]))) {
+
+                int lenPos = -virtualStack.indexOf(STR."#\{local.type()[1]}");
+                if (lenPos == 1) {
+                    virtualStack.add(STR."#\{local.type()[1]}");
+                    lenPos = -(virtualStack.size() - 1);
+
+                    // get size of args array
+                    instructions.add(new Call("len", -virtualStack.size()));
+                    instructions.add(new Mov(-virtualStack.size(), lenPos));
+                }
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), lenPos));
+            } else if (local.type()[0].equals("Array")) {
+                if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {
+                    System.out.println(STR."var \{local.type()[1]} doesn't exists in arguements");
+                }
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
             }
         }
 
@@ -102,6 +164,9 @@ public class Translator {
                                 )
                         );
                     }
+                } else {
+                    System.out.println("cannot assign arrays");
+                    throw new RuntimeException();
                 }
             }
 
@@ -424,13 +489,8 @@ public class Translator {
     private static int orCreateStack(int literal, ArrayList<String> virtualStack, ArrayList<BytecodeInstruction> instructions) {
         int pos = virtualStack.indexOf(STR."#\{literal}");
 
-        if (pos == -1) {
-            virtualStack.add(STR."#\{literal}"); // literals will have a # before them
-            pos = (virtualStack.size()) - 1;
-        }
-
-        // Could in the future bring constants to the top
-        instructions.add(new Set(-pos, literal));
+        assert pos != -1;
+        // stack literals are init at the start of the function
 
         return pos;
     }

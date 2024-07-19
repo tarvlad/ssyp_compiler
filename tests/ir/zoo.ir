@@ -2,14 +2,11 @@
     #F_NAME zoo;
     #F_ARGS_BEGIN;
         @Array x Int zoo_arr;
-        @Int y;
     #F_ARGS_END;
     #F_VARS_BEGIN;
-        @Int t1;
-        @Int t2;
     #F_VARS_END;
     #F_BODY_BEGIN;
-        #print
+        #cprint_array zoo_arr;
     #F_BODY_END;
 #F_END;
 
@@ -24,7 +21,6 @@
         #[] zoo_arr #0 #90;
         #[] zoo_arr #1 #79;
         #[] zoo_arr #2 #79;
-        #zoo x #5 #3;
-        #F_RETURN x;
+        #zoo #0 #5 #3;
     #F_BODY_END;
 #F_END;

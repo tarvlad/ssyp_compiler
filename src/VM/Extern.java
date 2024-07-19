@@ -47,8 +47,8 @@ public class Extern implements Instruction {
             return;
         }
 
-        if (runtime.getCurrentFunctionName().equals("cprint_array")) {
-            Integer[] charArray = runtime.getArray(runtime.stackAt(0));
+        if (runtime.getCurrentFunctionName().equals("print_string")) {
+            Integer[] charArray = runtime.getArray(runtime.stackAt(-1));
             if (charArray == null) {
                 runtime.returnWith(0);
                 return;
@@ -61,6 +61,10 @@ public class Extern implements Instruction {
 
             runtime.returnWith(0);
             return;
+        }
+
+        if (runtime.getCurrentFunctionName().equals("print_char")) {
+            System.out.println((char) runtime.stackAt(-1));
         }
 
         if (runtime.getCurrentFunctionName().equals("len")) {

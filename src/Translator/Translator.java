@@ -22,7 +22,11 @@ public class Translator {
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
 
-        file.add_func("cprint_array");
+        file.add_func("print_string");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+
+        file.add_func("print_char");
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
 
@@ -98,7 +102,6 @@ public class Translator {
                 if (Arrays.stream(func.arguments()).noneMatch(variable -> variable.name().equals(local.type()[1]))) {
                     System.out.println(STR."var \{local.type()[1]} doesn't exists in arguements");
                 }
-
                 instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
             }
         }
@@ -167,6 +170,12 @@ public class Translator {
                                 )
                         );
                     }
+                } else if (getVarType(ins, 0, typeMap).equals("String")) {
+                    if (ins.get(2).isEmpty() || ins.get(2).get().getLeft().isEmpty()) {
+                        throw new RuntimeException();
+                    }
+                    instructions.add(new WriteStr(getVarAddress(ins, 0, virtualStack, instructions),
+                            ins.get(2).get().getLeft().get()));
                 } else {
                     System.out.println("cannot assign arrays");
                     throw new RuntimeException();
@@ -263,7 +272,7 @@ public class Translator {
             }
 
             case ARRAY_IN -> {
-                if (!getVarType(ins, 0, typeMap).equals("Array")) {
+                if (!getVarType(ins, 0, typeMap).equals("Array") && !getVarType(ins, 0, typeMap).equals("String")) {
                     System.out.println("Ошибка: У ARRAY_IN первый аргумент должен быть массивом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
@@ -281,7 +290,7 @@ public class Translator {
             }
 
             case ARRAY_OUT -> {
-                if (!getVarType(ins, 0, typeMap).equals("Array")) {
+                if (!getVarType(ins, 0, typeMap).equals("Array") && !getVarType(ins, 0, typeMap).equals("String")) {
                     System.out.println("Ошибка: У ARRAY_OUT первый аргумент должен быть массивом.");
                     throw new RuntimeException();
                 } else if (!getVarType(ins, 1, typeMap).equals("Int")) {
@@ -357,6 +366,11 @@ public class Translator {
     private static String getVarType(Instruction ins, int index, HashMap<String, String[]> typeMap) {
         Optional<Either<String, Integer>> var = ins.get(index);
         if (var.isPresent() && var.get().getLeft().isPresent()) {
+            if (!typeMap.containsKey(var.get().getLeft().get())) {
+                System.out.println(STR."var \{var.get().getLeft().get()} doesn't exists");
+                throw new RuntimeException();
+            }
+
             return typeMap.get(var.get().getLeft().get())[0];
         } else {
             return "Int";

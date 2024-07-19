@@ -77,6 +77,9 @@ public class InputReader {
                 case "ARRAY_OUT":
                     func.add(new ArrayOut(reader.nextInt(), reader.nextInt(), reader.nextInt()));
                     break;
+                case "WRITE_STR":
+                    func.add(new WriteStr(reader.nextInt(), reader.nextLine().substring(1)));
+                    break;
                 default:
                     assert s.endsWith(":");
                     functionName = s.substring(0, s.length() - 1);

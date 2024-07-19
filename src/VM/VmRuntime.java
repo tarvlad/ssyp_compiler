@@ -1,9 +1,12 @@
 package VM;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 
 public class VmRuntime {
     private final List<Integer> stack;
@@ -130,6 +133,21 @@ public class VmRuntime {
 
     public void updateArray(int key, int index, int value) {
         heap.get(key)[index] = value;
+    }
+
+    public void changeArray(int key, Integer[] newArray) {
+        heap.put(key, newArray);
+    }
+
+    public int writeStr(String string) {
+        Integer[] array = new Integer[string.length()];
+        char[] char_array = string.toCharArray();
+        for (int k = 0; k < string.length(); k++) {
+            array[k] = ((int) char_array[k]);
+        }
+        int stringKey = createNewArray(array.length);
+        changeArray(stringKey, array);
+        return stringKey;
     }
 
     public Integer[] getArray(int key) {

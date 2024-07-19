@@ -177,6 +177,8 @@ public class Parser {
             case "CONTINUE" -> InstructionType.CONTINUE;
             case "<-" -> InstructionType.STRUCT_ASSIGN;
             case "->" -> InstructionType.STRUCT_ACCESS;
+            case "FOR" -> InstructionType.FOR;
+            case "ENDFOR" -> InstructionType.FOR_END;
             default -> InstructionType.CALL;
         };
     }

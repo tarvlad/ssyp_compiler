@@ -20,4 +20,6 @@ public enum InstructionType {
     CONTINUE,
     STRUCT_ACCESS,
     STRUCT_ASSIGN,
+    FOR,
+    FOR_END
 }

@@ -88,7 +88,10 @@ public class Translator {
                     virtualStack.add(STR."#\{local.type()[1]}");
                     lenPos = -(virtualStack.size() - 1);
 
+                    long argIndex = Arrays.stream(func.arguments()).takeWhile(arg -> arg.type()[0].equals("Array") && arg.name().equals(local.type()[1])).count() - 1;
+
                     // get size of args array
+                    instructions.add(new Mov(-(int) argIndex, -(virtualStack.size() + 1)));
                     instructions.add(new Call("len", -virtualStack.size()));
                     instructions.add(new Mov(-virtualStack.size(), lenPos));
                 }
@@ -448,6 +451,26 @@ class Block {
         this.continues = new ArrayList<>();
     }
 
+    static Block LastWhile(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (!blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
+    }
+
+    static Block LastIf(ArrayList<Block> blocks) {
+        for (int i = blocks.size() - 1; i > -1; i--) {
+            if (blocks.get(i).IsIfBlock)
+                return blocks.get(i);
+        }
+
+        assert false;
+        return blocks.getFirst();
+    }
+
     public void fixIfJumps(ArrayList<BytecodeInstruction> instructions) {
         assert this.end != Integer.MAX_VALUE;
         assert this.IsIfBlock;
@@ -521,25 +544,5 @@ class Block {
         } else {
             midJump.add(instructionIndex);
         }
-    }
-
-    static Block LastWhile(ArrayList<Block> blocks) {
-        for (int i = blocks.size() - 1; i > -1; i--) {
-            if (!blocks.get(i).IsIfBlock)
-                return blocks.get(i);
-        }
-
-        assert false;
-        return blocks.getFirst();
-    }
-
-    static Block LastIf(ArrayList<Block> blocks) {
-        for (int i = blocks.size() - 1; i > -1; i--) {
-            if (blocks.get(i).IsIfBlock)
-                return blocks.get(i);
-        }
-
-        assert false;
-        return blocks.getFirst();
     }
 }

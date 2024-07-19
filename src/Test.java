@@ -1,5 +1,6 @@
 import Parsing.Function;
 import Parsing.Parser;
+import Parsing.Program;
 import Parsing.Struct;
 import Translator.BytecodeFile;
 import Translator.Translator;
@@ -35,7 +36,7 @@ public class Test {
 
     static void runIr(String pathToFile) {
         List<String> tokens = Lexer.tokenizeFromFile(pathToFile);
-      
+
         Parser parser = new Parser(tokens);
         Function[] functions = parser.getFunctions();
         Struct[] structs = parser.getStructs();
@@ -50,7 +51,7 @@ public class Test {
         BytecodeFile file = new BytecodeFile("out/bytecode.bc");
         file.init();
 
-        Translator.translate(functions, file);
+        Translator.translate(new Program(functions, structs), file);
 
         file.write();
 
@@ -58,6 +59,6 @@ public class Test {
     }
 
     static void runByteCode(String pathToFile) {
-        VM.main(new String[]{ pathToFile });
+        VM.main(new String[]{pathToFile});
     }
 }

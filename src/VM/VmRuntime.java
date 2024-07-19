@@ -18,9 +18,9 @@ public class VmRuntime {
     private int stackBase;
     private int stackBottom;
     private int currentInstruction = 0;
-    private int thisKey = 1;
+    private int thisKey = 0xFFF;
 
-    private ConservativeGC gc;
+    private final ConservativeGC gc;
 
     VmRuntime(InputReader reader, int size, boolean isDebugging) {
         this.stack = new ArrayList<>(size + 1);
@@ -102,6 +102,8 @@ public class VmRuntime {
     }
 
     public void returnWith(int obj) {
+        this.stackBottom = this.stackBase;
+
         if (this.stackAt(1) == this.endInstruction || this.callStack.size() == 1) {
             this.currentInstruction = this.currentInstructions.size();
             this.stackBase = this.stack.size() - 1;
@@ -117,7 +119,6 @@ public class VmRuntime {
             this.setStackAt(1, obj);
             this.stackBase = base;
         }
-        this.stackBottom = this.stackBase;
 
         this.gc.cleanupHeap(this, obj);
     }
@@ -161,7 +162,7 @@ public class VmRuntime {
     }
 
     public List<Integer> getRawStackView() {
-        return this.stack.subList(this.stackBottom, this.stack.size() - 1);
+        return this.stack.subList(this.stackBottom, this.stack.size());
     }
 
     public Set<Integer> getRawHeapPages() {

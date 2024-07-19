@@ -9,7 +9,7 @@ public class ConservativeGC {
         seenArrays.add(extraKey);
 
         for (int slotValue : runtime.getRawStackView()) {
-            if (runtime.getArray(slotValue) != null) {
+            if (runtime.getArray(slotValue) != null && !seenArrays.contains(slotValue)) {
                 seenArrays.add(slotValue);
             }
         }

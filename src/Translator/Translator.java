@@ -6,9 +6,9 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Translator {
-    public static void translate(Function[] functions, BytecodeFile file) {
-        for (Function func : functions) {
-            generateFunction(func, file);
+    public static void translate(Program prog, BytecodeFile file) {
+        for (Function func : prog.functions()) {
+            generateFunction(func, prog.structs(), file);
         }
 
         file.add_func("print");
@@ -32,7 +32,7 @@ public class Translator {
         file.add_instructions(new Return(0));
     }
 
-    private static void generateFunction(Function func, BytecodeFile file) {
+    private static void generateFunction(Function func, Struct[] structs, BytecodeFile file) {
         ArrayList<String> virtualStack = new ArrayList<>();
         virtualStack.addAll(Arrays.stream(func.arguments()).map(Variable::name).toList());
         virtualStack.addAll(Arrays.stream(func.locals()).map(Variable::name).toList());
@@ -104,6 +104,8 @@ public class Translator {
                 }
 
                 instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
+            } else if (Arrays.stream(structs).anyMatch(struct -> struct.name().equals(local.type()[0]))) {
+                // TODO: error handling?
             }
         }
 

@@ -17,7 +17,7 @@ public class Main {
         Function[] functions = parser.getFunctions();
 
         // TODO: support different bytecode output
-        BytecodeFile file = new BytecodeFile(args[0] + ".bc");
+        BytecodeFile file = new BytecodeFile(STR."\{args[0]}.bc");
         file.init();
 
         Translator.translate(functions, file);

@@ -7,7 +7,7 @@ public class ArrayIn implements Instruction {
     private final int indexOffset;
     private final int value;
 
-    ArrayIn(int arrayOffset, int index, int value) {
+    ArrayIn(int arrayOffset, int indexOffset, int value) {
         this.arrayOffset = arrayOffset;
         this.indexOffset = indexOffset;
         this.value = value;

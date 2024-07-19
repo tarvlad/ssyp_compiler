@@ -16,6 +16,8 @@
         #/ half_len len #2;
         #= x #0;
 
+        #print #4 x half_len len;
+
         #WHILE < x half_len;
             #- x_past_mid half_len x;
             #IF == x_past_mid #0;

@@ -2,10 +2,7 @@ package Translator;
 
 import Parsing.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class Translator {
@@ -232,6 +229,7 @@ public class Translator {
                     ));
                 }
             }
+
             case WHILE_BEGIN -> {
                 ins.get(0).flatMap(Either::getLeft).ifPresentOrElse(cmpType -> instructions.add(
                         new Jump(CompareTypes.fromSymbol(cmpType).invert(),
@@ -247,7 +245,7 @@ public class Translator {
                 blocks.add(new Block(instructions.size() - 1, false));
             }
 
-            case WHILE_END -> {
+            case WHILE_END, FOR_END -> {
                 blocks.getLast().end = instructions.size();
                 blocks.getLast().fixWhileJumps(instructions);
                 instructions.add(
@@ -288,10 +286,9 @@ public class Translator {
             }
 
             case FOR -> {
-                if (ins.get(0).isPresent() ) {
-                    if (ins.get(0).get().getLeft().isPresent()) {
-                        String elm = ins.get(0).get().getLeft().get();
-                    } else {
+                // Для Optional
+                if (ins.get(0).isPresent()) {
+                    if (ins.get(0).get().getLeft().isEmpty()) {
                         throw new RuntimeException();
                     }
                 } else {
@@ -312,6 +309,54 @@ public class Translator {
                 if (!(ins.get(2).isPresent() || ins.get(2).get().getLeft().isPresent())) {
                     throw new RuntimeException();
                 }
+                // SETЫ
+                String var_name = STR."##\{virtualStack.size()}";
+                if (!virtualStack.contains(var_name)) {
+                    virtualStack.add(var_name);
+                    instructions.add(new Set(
+                                    -virtualStack.indexOf(var_name),
+                                    0
+                            )
+                    );
+                }
+                if (!virtualStack.contains("##ONE")) {
+                    virtualStack.add("##ONE");
+                }
+                instructions.add(new Set(
+                        -virtualStack.indexOf("##ONE"),
+                        1
+                ));
+                String array_length_name = STR."##\{ins.get(2).get().getLeft().get()}_LENGTH";
+                if (!virtualStack.contains(array_length_name)) {
+                    virtualStack.add(array_length_name);
+                }
+
+                instructions.add(new Mov(-virtualStack.indexOf(ins.get(2).get().getLeft().get()), -(virtualStack.size() + 1)));
+                instructions.add(new Call("len", -virtualStack.size()));
+                instructions.add(new Mov(-virtualStack.size(), -virtualStack.indexOf(array_length_name)));
+
+                Collections.addAll(virtualStack, "#", "#");
+                // WHILE + ADD + ARRAY_OUT
+                instructions.add(
+                        new Jump(CompareTypes.GreaterEqual,
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(array_length_name),
+                                Integer.MAX_VALUE
+                        )
+                );
+                blocks.add(new Block(instructions.size() - 1, false));
+                instructions.add(
+                        new ArrayOut(-virtualStack.indexOf(ins.get(2).get().getLeft().get()),
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(ins.get(0).get().getLeft().get())
+                        )
+                );
+                instructions.add(
+                        new Add(-virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf(var_name),
+                                -virtualStack.indexOf("##ONE")
+                        )
+                );
             }
         }
     }

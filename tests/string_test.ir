@@ -1,8 +1,8 @@
 #F_BEGIN;
     #F_NAME zeros_fill;
-    #F_ARGS_BEGIN;
+    #F_VARS_BEGIN;
         @Array #100 Int array;
-    #F_ARGS_END;
+    #F_VARS_END;
     #F_BODY_BEGIN;
         #range array #0 #100 #1;
         #FOR k IN array;
@@ -30,6 +30,24 @@
 #F_END;
 
 #F_BEGIN;
+    #F_NAME add_if_in_range;
+    #F_ARGS_BEGIN;
+        @Int sum;
+        @Array x Int game_place;
+        @Int coordinate;
+    #F_ARGS_END;
+    #F_BODY_BEGIN;
+    #IF < #0 coordinate;
+        #IF > #100 coordinate;
+            #]+[ sum game_place coordinate sum;
+            #F_RETURN sum;
+        #ENDIF;
+    #ENDIF;
+    #F_RETURN #0;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
     #F_NAME neighbors_sum;
     #F_VARS_BEGIN;
         @Array #100 Int game_place;
@@ -38,21 +56,23 @@
     #F_VARS_END;
     #F_BODY_BEGIN;
         #- coordinate coordinate #11;
+        #IF < coordinate 0;
         #][ game_place coordinate sum;
+        #ENDIF;
         #+ coordinate coordinate #1;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #1;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #8;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #2;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #8;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #1;
-        #]+[ sum game_place coordinate sum;
+        #]add_if_in_range sum game_place coordinate sum;
         #+ coordinate coordinate #1;
-        #]+[ sum game_place coordinate sum;
+        #add_if_in_range sum game_place coordinate sum;
         #F_RETURN sum;
     #F_BODY_END;
 #F_END;
@@ -62,8 +82,11 @@
     #F_VARS_BEGIN;
         @Array #100 Int game_place;
         @Array #10 Int begin;
+        @Int sum;
+        @Int k;
     #F_VARS_END;
     #F_BODY_BEGIN;
-
+        #zeros_fill game_place;
+        #FOR
     #F_BODY_END;
 #F_END;

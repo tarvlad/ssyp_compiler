@@ -83,11 +83,10 @@ public class Extern implements Instruction {
             return;
         }
 
-        runtime.returnWith(0);
-
         if (runtime.getCurrentFunctionName().equals("clear_out")) {
             System.out.print("\033[H\033[J");
             runtime.returnWith(0);
+            return;
         }
 
         if (runtime.getCurrentFunctionName().equals("sleep")) {
@@ -95,10 +94,13 @@ public class Extern implements Instruction {
             try {
                 TimeUnit.MILLISECONDS.sleep(timeout);
             } catch (InterruptedException e) {
-
+                System.out.println("sleep interrupted");
             }
             runtime.returnWith(0);
+            return;
         }
+
+        runtime.returnWith(0);
     }
 
     @Override

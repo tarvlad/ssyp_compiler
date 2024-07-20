@@ -41,7 +41,7 @@ public class Translator {
 
         file.add_func("sleep");
         file.add_instructions(new Extern());
-        file.add_instructions(new Return(0))
+        file.add_instructions(new Return(0));
 
         file.add_func("assert_eq");
         file.add_instructions(new Extern());

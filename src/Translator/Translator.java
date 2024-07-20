@@ -34,6 +34,14 @@ public class Translator {
         file.add_func("range");
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
+
+        file.add_func("clear_out");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
+
+        file.add_func("sleep");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
     }
 
     private static void generateFunction(Function func, BytecodeFile file) {

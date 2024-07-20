@@ -1,6 +1,7 @@
 package VM;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 
 public class Extern implements Instruction {
@@ -83,6 +84,21 @@ public class Extern implements Instruction {
         }
 
         runtime.returnWith(0);
+
+        if (runtime.getCurrentFunctionName().equals("clear_out")) {
+            System.out.print("\033[H\033[J");
+            runtime.returnWith(0);
+        }
+
+        if (runtime.getCurrentFunctionName().equals("sleep")) {
+            int timeout = runtime.stackAt(0);
+            try {
+                TimeUnit.MILLISECONDS.sleep(timeout);
+            } catch (InterruptedException e) {
+
+            }
+            runtime.returnWith(0);
+        }
     }
 
     @Override

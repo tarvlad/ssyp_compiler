@@ -6,7 +6,7 @@
     #F_VARS_BEGIN;
     #F_VARS_END;
     #F_BODY_BEGIN;
-        #cprint_array zoo_arr;
+        #print_string zoo_arr;
     #F_BODY_END;
 #F_END;
 

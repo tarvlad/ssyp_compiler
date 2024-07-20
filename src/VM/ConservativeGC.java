@@ -4,21 +4,25 @@ import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 public class ConservativeGC {
+
+    private void AddValidArrays(VmRuntime runtime, ArrayList<Integer> seenArrays, int arrayLink) {
+        Integer[] array = runtime.getArray(arrayLink);
+        if (array != null && !seenArrays.contains(arrayLink)) {
+            seenArrays.add(arrayLink);
+
+            for (int i: IntStream.range(0, array.length).toArray()) {
+                if ( array[i] != null) {
+                    AddValidArrays(runtime, seenArrays, array[i]);
+                }
+            }
+        }
+    }
     public void cleanupHeap(VmRuntime runtime, int extraKey) {
         ArrayList<Integer> seenArrays = new ArrayList<>(4);
         seenArrays.add(extraKey);
 
         for (int slotValue : runtime.getRawStackView()) {
-            Integer[] array = runtime.getArray(slotValue);
-            if (array != null && !seenArrays.contains(slotValue)) {
-                seenArrays.add(slotValue);
-
-                for (int i: IntStream.range(0, array.length).toArray()) {
-                    if ( array[i] != null && runtime.getArray(array[i]) != null && !seenArrays.contains(array[i])) {
-                        seenArrays.add(array[i]);
-                    }
-                }
-            }
+            AddValidArrays(runtime, seenArrays, slotValue);
         }
 
         for (int key : runtime.getRawHeapPages().stream().toList()) {

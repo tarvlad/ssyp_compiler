@@ -17,7 +17,8 @@
 - Блок операторов "F_BEGIN" и "F_END" позволяет сделать функцию.
 
 ### Переменные
-- Переменные обозначаются символом "@", после чего прописывается тип переменной (возможен только тип "Int"), а затем пишется название переменной.
+- Переменные обозначаются символом "@", после чего прописывается тип переменной (Возможен Int, Array, String), а затем пишется название переменной.
+- Массив (Array) возможен только из Int значений.
 - Они могут содержать только целочисленные значения.
 
 ### Выражения
@@ -32,10 +33,13 @@
 - "cprint_array" используется для вывода масива, как строку.
 - "len" возвращает длину массива.
 
+### Синтаксис
+- "//" используются для обозначения коментариев.
+
 ### Пример программы вычесления чисел фибоначчи  с помощью цикла while
 ```
 #F_BEGIN;
-    #F_NAME fib;
+    #F_NAME fib;    //функции присваивается имя fib
     #F_ARGS_BEGIN;
         @Int n;
     #F_ARGS_END;
@@ -148,6 +152,81 @@
 #ENDFOR;
 #F_RETURN sum;
 #F_BODY_END;
+#F_END;
+```
+
+### Пример выполнения программы Array flip
+```
+#F_BEGIN;
+    #F_NAME flip;
+    #F_ARGS_BEGIN;
+        @Array x Int arr;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @Array arr Int arr2;
+        @Int len;
+        @Int half_len;
+        @Int x;
+        @Int x_past_mid;
+        @Int tmp;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #len len arr;
+        #/ half_len len #2;
+        #= x #0;
+
+        #print #4 #3 x half_len len;
+
+        #WHILE < x half_len;
+            #- x_past_mid half_len x;
+            #IF == x_past_mid #0;
+                #BREAK;
+            #ENDIF;
+
+            #][ arr x tmp;
+            #[] arr x_past_mid tmp;
+
+            #+ x x #1;
+        #ENDWHILE;
+
+        #F_RETURN arr2;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
+    #F_NAME create_n_array;
+    #F_ARGS_BEGIN;
+        @Int n;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @Array n Int arr;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #F_RETURN arr;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
+    #F_NAME main;
+    #F_ARGS_BEGIN;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @Array #3 Int arr;
+        @Int x;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #create_n_array arr #5;
+        #[] arr #0 #1;
+        #[] arr #1 #2;
+        #[] arr #2 #3;
+        #[] arr #3 #4;
+        #[] arr #4 #5;
+        #print_array #1 arr;
+        #flip arr arr;
+        #print_array #1 arr;
+        #len x arr;
+        #F_RETURN x;
+    #F_BODY_END;
 #F_END;
 ```
 

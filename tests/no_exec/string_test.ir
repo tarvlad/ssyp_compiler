@@ -49,9 +49,11 @@
 
 #F_BEGIN;
     #F_NAME neighbors_sum;
-    #F_VARS_BEGIN;
+    #F_ARGS_BEGIN;
         @Array #100 Int game_place;
         @Int coordinate;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
         @Int sum;
     #F_VARS_END;
     #F_BODY_BEGIN;
@@ -81,12 +83,17 @@
     #F_NAME main;
     #F_VARS_BEGIN;
         @Array #100 Int game_place;
+        @Array #100 Int range;
         @Array #10 Int begin;
         @Int sum;
         @Int k;
     #F_VARS_END;
     #F_BODY_BEGIN;
         #zeros_fill game_place;
-        #FOR
+        #range range #0 #100 #1;
+        #FOR k IN range;
+            #neighbors_sum game_place k;
+            #IF =
+        #ENDFOR;
     #F_BODY_END;
 #F_END;

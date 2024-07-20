@@ -4,84 +4,93 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Lexer {
-    public static List<String> tokenize(String input) {
-        assert !input.contains("\t");
-        List <Integer> startedForComments = new ArrayList<>();
-        List <Integer> endedForComments = new ArrayList<>();
-        char[] toCharInputForComments = input.toCharArray();
-        boolean flagForComments = true;
-        for (int i = 1; i < input.length(); ++i) {
-            if (toCharInputForComments[i] == '"' && toCharInputForComments[i - 1] != '\\') {
-                if (flagForComments) {
-                    startedForComments.add(i);
-                    flagForComments = false;
-                } else {
-                    endedForComments.add(i);
-                    flagForComments = true;
-                }
-            }
-        }
-        for (int i = 0; i < toCharInputForComments.length - 1; ++i) {
-            if (toCharInputForComments[i] == '/' && toCharInputForComments[i + 1] == '/')  {
-                boolean flag = true;
-                for (int j = 0; j < endedForComments.size(); ++j) {
-                    if (i > startedForComments.get(j) && i < endedForComments.get(j)) {
-                        flag = false;
+    public static List<String> tokenize(String inputStr) {
+        assert !inputStr.contains("\t");
+        List<Integer> quotesBegIdxs = new ArrayList<>();
+        List<Integer> quotesEndIdxs = new ArrayList<>();
+        char[] input = inputStr.toCharArray();
+
+        boolean inComment = true;
+        assert input[0] != '"';
+        for (int i = 1; i < inputStr.length(); ++i) {
+            // "\\""
+            if (input[i] == '"') {
+                int countOfBackSlach = 0;
+                for (int j = i; j >= 0; --j) {
+                    if (input[i] == '\\') {
+                        countOfBackSlach += 1;
+                    } else {
                         break;
                     }
                 }
-                if (flag) {
-                    int end_delete = toCharInputForComments.length - 1;
-                    for (int j = i; j < toCharInputForComments.length; ++j) {
-                        if (toCharInputForComments[j] == '\n') {
-                            end_delete = j;
+                if (countOfBackSlach % 2 == 0) {
+                    if (inComment) {
+                        quotesBegIdxs.add(i);
+                        inComment = false;
+                    } else {
+                        quotesEndIdxs.add(i);
+                        inComment = true;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < input.length - 1; ++i) {
+            if (input[i] == '/' && input[i + 1] == '/')  {
+                boolean invertInQuotes = true;
+                for (int j = 0; j < quotesEndIdxs.size(); ++j) {
+                    if (i > quotesBegIdxs.get(j) && i < quotesEndIdxs.get(j)) {
+                        invertInQuotes = false;
+                        break;
+                    }
+                }
+
+                if (invertInQuotes) {
+                    int erasureLimiter = input.length - 1;
+                    for (int j = i; j < input.length; ++j) {
+                        if (input[j] == '\n') {
+                            erasureLimiter = j;
                             break;
                         }
                     }
-                    for (int j = i; j <= end_delete; ++j) {
-                        toCharInputForComments[j] = ' ';
+                    for (int j = i; j <= erasureLimiter; ++j) {
+                        input[j] = ' ';
                     }
-
                 }
             }
         }
-        List <Integer> started = new ArrayList<>();
-        List <Integer> ended = new ArrayList<>();
-        char[] toCharInput = toCharInputForComments;
-        boolean flag = true;
-        for (int i = 1; i < toCharInputForComments.length; ++i) {
-            if (toCharInput[i] == '"' && toCharInput[i - 1] != '\\') {
-                if (flag) {
+
+        List<Integer> started = new ArrayList<>();
+        List<Integer> ended = new ArrayList<>();
+        boolean inverseInQuotes = true;
+        assert input[0] != '"';
+
+        for (int i = 1; i < input.length; ++i) {
+            if (input[i] == '"' && input[i - 1] != '\\') {
+                if (inverseInQuotes) {
                     started.add(i);
-                    flag = false;
+                    inverseInQuotes = false;
                 } else {
                     ended.add(i);
-                    flag = true;
+                    inverseInQuotes = true;
                 }
             }
         }
-        if (started.size() != ended.size()) {
-            return new ArrayList<>();
-        }
+        assert started.size() == ended.size();
 
-        char[] input1 = toCharInputForComments;
         for (int i = 0; i < started.size(); ++i) {
             for (int j = started.get(i) + 1; j < ended.get(i); ++j) {
-                input1[j] = '.';
+                input[j] = '.'; // TODO strange place, think about it (in future)
             }
         }
-        String input2 = "";
-        for (int i = 0; i < input1.length; ++i) {
-            input2 += input1[i];
-        }
-        List <String> tokens =  getSplitBySpc(input2);
+
+        List<String> tokens = getSplitBySpc(String.valueOf(input));
+
         int ind = 0;
         for (int i = 1; i < tokens.size() - 1; ++i) {
-            if (Objects.equals(tokens.get(i - 1), "\"") && Objects.equals(tokens.get(i + 1), "\"")) {
-                tokens.set(i, input.substring(started.get(ind) + 1, ended.get(ind)));
+            if (tokens.get(i - 1).equals("\"") && tokens.get(i + 1).equals("\"")) {
+                tokens.set(i, inputStr.substring(started.get(ind) + 1, ended.get(ind)));
                 ind += 1;
             }
 
@@ -92,24 +101,24 @@ public class Lexer {
     private static List<String> getSplitBySpc(String input) {
         assert !input.contains("\t");
 
-        String splitBySemicolon = input
+        String splitBySpecialSymbol = input
                 .replace("\r", "")
                 .replace("\n", "")
                 .replace(";", " ; ")
                 .replace("#", " # ")
                 .replace("@", " @ ")
                 .replace("\"", " \" ");
-        List <String> splitSLines = new ArrayList<>(List.of(splitBySemicolon.split(" ")));
+        List <String> splitSpace = new ArrayList<>(List.of(splitBySpecialSymbol.split(" ")));
 
-        int size = splitSLines.size();
+        int size = splitSpace.size();
         for (int i = 0; i < size; ++i) {
-            if (splitSLines.get(i).isEmpty()) {
-                splitSLines.remove(i);
+            if (splitSpace.get(i).isEmpty()) {
+                splitSpace.remove(i);
                 --i;
             }
-            size = splitSLines.size();
+            size = splitSpace.size();
         }
-        return splitSLines;
+        return splitSpace;
     }
     public static List<String> tokenizeFromFile(String filename) {
         try {

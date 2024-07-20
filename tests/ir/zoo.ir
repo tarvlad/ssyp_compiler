@@ -21,6 +21,6 @@
         #[] zoo_arr #0 #90;
         #[] zoo_arr #1 #79;
         #[] zoo_arr #2 #79;
-        #zoo #0 #5 #3;
+        #zoo #0 zoo_arr;
     #F_BODY_END;
 #F_END;

@@ -1,7 +1,7 @@
 package VM;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class ConservativeGC {
     public void cleanupHeap(VmRuntime runtime, int extraKey) {
@@ -9,8 +9,15 @@ public class ConservativeGC {
         seenArrays.add(extraKey);
 
         for (int slotValue : runtime.getRawStackView()) {
-            if (runtime.getArray(slotValue) != null && !seenArrays.contains(slotValue)) {
+            Integer[] array = runtime.getArray(slotValue);
+            if (array != null && !seenArrays.contains(slotValue)) {
                 seenArrays.add(slotValue);
+
+                for (int i: IntStream.range(0, array.length).toArray()) {
+                    if ( array[i] != null && runtime.getArray(array[i]) != null && !seenArrays.contains(array[i])) {
+                        seenArrays.add(array[i]);
+                    }
+                }
             }
         }
 

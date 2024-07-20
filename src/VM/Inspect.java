@@ -10,7 +10,7 @@ public class Inspect implements Instruction {
 
     @Override
     public void execute(VmRuntime runtime) {
-        System.out.println("inspect: " + runtime.stackAt(this.offset));
+        System.out.println(STR."inspect: \{runtime.stackAt(this.offset)}");
     }
 
     @Override

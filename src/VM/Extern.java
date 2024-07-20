@@ -78,6 +78,13 @@ public class Extern implements Instruction {
             return;
         }
 
+        if (runtime.getCurrentFunctionName().equals("assert_eq")) {
+            assert runtime.stackAt(0) == runtime.stackAt(1);
+
+            runtime.returnWith(0);
+            return;
+        }
+
         runtime.returnWith(0);
     }
 

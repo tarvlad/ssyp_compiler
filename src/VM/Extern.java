@@ -1,6 +1,7 @@
 package VM;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 
 public class Extern implements Instruction {
@@ -37,8 +38,8 @@ public class Extern implements Instruction {
             return;
         }
 
-        if (runtime.getCurrentFunctionName().equals("cprint_array")) {
-            Integer[] charArray = runtime.getArray(runtime.stackAt(0));
+        if (runtime.getCurrentFunctionName().equals("print_string")) {
+            Integer[] charArray = runtime.getArray(runtime.stackAt(-1));
             if (charArray == null) {
                 runtime.returnWith(0);
                 return;
@@ -51,6 +52,10 @@ public class Extern implements Instruction {
 
             runtime.returnWith(0);
             return;
+        }
+
+        if (runtime.getCurrentFunctionName().equals("print_char")) {
+            System.out.println((char) runtime.stackAt(-1));
         }
 
         if (runtime.getCurrentFunctionName().equals("len")) {
@@ -81,6 +86,23 @@ public class Extern implements Instruction {
         if (runtime.getCurrentFunctionName().equals("assert_eq")) {
             assert runtime.stackAt(0) == runtime.stackAt(1);
 
+            runtime.returnWith(0);
+            return;
+        }
+
+        if (runtime.getCurrentFunctionName().equals("clear_out")) {
+            System.out.print("\033[H\033[J");
+            runtime.returnWith(0);
+            return;
+        }
+
+        if (runtime.getCurrentFunctionName().equals("sleep")) {
+            int timeout = runtime.stackAt(0);
+            try {
+                TimeUnit.MILLISECONDS.sleep(timeout);
+            } catch (InterruptedException e) {
+                System.out.println("sleep interrupted");
+            }
             runtime.returnWith(0);
             return;
         }

@@ -6,30 +6,94 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Lexer {
-    public static List<String> tokenize(String input) {
-        List <String> tokens = new ArrayList<>();
-        List<String> splitSLines = getSplitBySpc(input);
+    public static List<String> tokenize(String inputStr) {
+        assert !inputStr.contains("\t");
+        List<Integer> quotesBegIdxs = new ArrayList<>();
+        List<Integer> quotesEndIdxs = new ArrayList<>();
+        char[] input = inputStr.toCharArray();
 
-        for (String elem : splitSLines) {
-            boolean startsWSpec = elem.charAt(0) == '#' || elem.charAt(0) == '@';
-            int lastIdx = elem.length() - 1;
-
-            if (startsWSpec && elem.charAt(lastIdx) == ';') {
-                tokens.add(String.valueOf(elem.charAt(0)));
-                tokens.add(elem.substring(1, lastIdx));
-                tokens.add(String.valueOf(elem.charAt(lastIdx)));
-
-            } else if (startsWSpec) {
-                tokens.add(String.valueOf(elem.charAt(0)));
-                tokens.add(elem.substring(1));
-
-            } else if (elem.charAt(lastIdx) == ';') {
-                tokens.add(elem.substring(0, lastIdx));
-                tokens.add(String.valueOf(elem.charAt(lastIdx)));
-
-            } else {
-                tokens.add(elem);
+        boolean inComment = true;
+        assert input[0] != '"';
+        for (int i = 1; i < inputStr.length(); ++i) {
+            // "\\""
+            if (input[i] == '"') {
+                int countOfBackSlach = 0;
+                for (int j = i; j >= 0; --j) {
+                    if (input[i] == '\\') {
+                        countOfBackSlach += 1;
+                    } else {
+                        break;
+                    }
+                }
+                if (countOfBackSlach % 2 == 0) {
+                    if (inComment) {
+                        quotesBegIdxs.add(i);
+                        inComment = false;
+                    } else {
+                        quotesEndIdxs.add(i);
+                        inComment = true;
+                    }
+                }
             }
+        }
+        for (int i = 0; i < input.length - 1; ++i) {
+            if (input[i] == '/' && input[i + 1] == '/')  {
+                boolean invertInQuotes = true;
+                for (int j = 0; j < quotesEndIdxs.size(); ++j) {
+                    if (i > quotesBegIdxs.get(j) && i < quotesEndIdxs.get(j)) {
+                        invertInQuotes = false;
+                        break;
+                    }
+                }
+
+                if (invertInQuotes) {
+                    int erasureLimiter = input.length - 1;
+                    for (int j = i; j < input.length; ++j) {
+                        if (input[j] == '\n') {
+                            erasureLimiter = j;
+                            break;
+                        }
+                    }
+                    for (int j = i; j <= erasureLimiter; ++j) {
+                        input[j] = ' ';
+                    }
+                }
+            }
+        }
+
+        List<Integer> started = new ArrayList<>();
+        List<Integer> ended = new ArrayList<>();
+        boolean inverseInQuotes = true;
+        assert input[0] != '"';
+
+        for (int i = 1; i < input.length; ++i) {
+            if (input[i] == '"' && input[i - 1] != '\\') {
+                if (inverseInQuotes) {
+                    started.add(i);
+                    inverseInQuotes = false;
+                } else {
+                    ended.add(i);
+                    inverseInQuotes = true;
+                }
+            }
+        }
+        assert started.size() == ended.size();
+
+        for (int i = 0; i < started.size(); ++i) {
+            for (int j = started.get(i) + 1; j < ended.get(i); ++j) {
+                input[j] = '.'; // TODO strange place, think about it (in future)
+            }
+        }
+
+        List<String> tokens = getSplitBySpc(String.valueOf(input));
+
+        int ind = 0;
+        for (int i = 1; i < tokens.size() - 1; ++i) {
+            if (tokens.get(i - 1).equals("\"") && tokens.get(i + 1).equals("\"")) {
+                tokens.set(i, inputStr.substring(started.get(ind) + 1, ended.get(ind)));
+                ind += 1;
+            }
+
         }
         return tokens;
     }
@@ -37,23 +101,25 @@ public class Lexer {
     private static List<String> getSplitBySpc(String input) {
         assert !input.contains("\t");
 
-        String splitBySemicolon = input
+        String splitBySpecialSymbol = input
                 .replace("\r", "")
                 .replace("\n", "")
-                .replace(";", "; ");
-        List <String> splitSLines = new ArrayList<>(List.of(splitBySemicolon.split(" ")));
+                .replace(";", " ; ")
+                .replace("#", " # ")
+                .replace("@", " @ ")
+                .replace("\"", " \" ");
+        List <String> splitSpace = new ArrayList<>(List.of(splitBySpecialSymbol.split(" ")));
 
-        int size = splitSLines.size();
+        int size = splitSpace.size();
         for (int i = 0; i < size; ++i) {
-            if (splitSLines.get(i).isEmpty()) {
-                splitSLines.remove(i);
+            if (splitSpace.get(i).isEmpty()) {
+                splitSpace.remove(i);
                 --i;
             }
-            size = splitSLines.size();
+            size = splitSpace.size();
         }
-        return splitSLines;
+        return splitSpace;
     }
-
     public static List<String> tokenizeFromFile(String filename) {
         try {
             return tokenize(Files.readString(Path.of(filename), Charset.defaultCharset()));
@@ -63,8 +129,3 @@ public class Lexer {
         }
     }
 }
-
-
-
-
-

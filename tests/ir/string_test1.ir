@@ -1,0 +1,11 @@
+#F_BEGIN;
+    #F_NAME main;
+    #F_VARS_BEGIN;
+        @String test_str;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #= test_str "//test\"";
+        #print_string #1 test_str;
+        #F_RETURN #0;
+    #F_BODY_END;
+#F_END;

@@ -6,9 +6,9 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 public class Translator {
-    public static void translate(Function[] functions, BytecodeFile file) {
-        for (Function func : functions) {
-            generateFunction(func, file);
+    public static void translate(Program prog, BytecodeFile file) {
+        for (Function func : prog.functions()) {
+            generateFunction(func, prog.structs(), file);
         }
 
         file.add_func("print");
@@ -30,9 +30,13 @@ public class Translator {
         file.add_func("range");
         file.add_instructions(new Extern());
         file.add_instructions(new Return(0));
+
+        file.add_func("assert_eq");
+        file.add_instructions(new Extern());
+        file.add_instructions(new Return(0));
     }
 
-    private static void generateFunction(Function func, BytecodeFile file) {
+    private static void generateFunction(Function func, Struct[] structs, BytecodeFile file) {
         ArrayList<String> virtualStack = new ArrayList<>();
         virtualStack.addAll(Arrays.stream(func.arguments()).map(Variable::name).toList());
         virtualStack.addAll(Arrays.stream(func.locals()).map(Variable::name).toList());
@@ -71,10 +75,6 @@ public class Translator {
         }
 
         for (Variable local : func.locals()) {
-            if (local.type().length < 2) {
-                continue;
-            }
-
             if (local.type()[0].equals("Array") && local.type()[1].equals("#")) {
                 instructions.add(new CreateArray(
                         -virtualStack.indexOf(local.name()),
@@ -104,11 +104,22 @@ public class Translator {
                 }
 
                 instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(local.type()[1])));
+            } else if (Arrays.stream(structs).anyMatch(struct -> struct.name().equals(local.type()[0]))) {
+                Struct struct = getStruct(structs, local.type());
+
+                assert struct != null;
+                String literalLength = STR."#\{struct.fields().length}";
+                if (!virtualStack.contains(literalLength)) {
+                    virtualStack.add(literalLength);
+                    instructions.add(new Set(-virtualStack.indexOf(literalLength), struct.fields().length));
+                }
+
+                instructions.add(new CreateArray(-virtualStack.indexOf(local.name()), -virtualStack.indexOf(literalLength)));
             }
         }
 
         for (Instruction ins : func.instructions()) {
-            generateInstruction(ins, block, instructions, virtualStack, typeMap);
+            generateInstruction(ins, block, instructions, virtualStack, typeMap, structs);
         }
 
         if (!block.isEmpty()) {
@@ -125,7 +136,7 @@ public class Translator {
         }
     }
 
-    private static void generateInstruction(Instruction ins, ArrayList<Block> blocks, ArrayList<BytecodeInstruction> instructions, ArrayList<String> virtualStack, HashMap<String, String[]> typeMap) {
+    private static void generateInstruction(Instruction ins, ArrayList<Block> blocks, ArrayList<BytecodeInstruction> instructions, ArrayList<String> virtualStack, HashMap<String, String[]> typeMap, Struct[] structs) {
         switch (ins.type()) {
             case ADD -> instructions.add(
                     new Add(getVarAddress(ins, 0, virtualStack, instructions),
@@ -430,12 +441,104 @@ public class Translator {
                         )
                 );
             }
+
+            case STRUCT_ACCESS -> {
+                Struct struct = getStruct(structs, new String[]{getVarType(ins, 0, typeMap)});
+                if (struct == null) {
+                    System.out.println("cannot use non struct for STRUCT_ACCESS");
+                    throw new RuntimeException();
+                }
+
+                int index = -1;
+                if (ins.get(1).isPresent()
+                        && ins.get(1).get().getLeft().isPresent()
+                        && Arrays.stream(struct.fields()).anyMatch(variable -> variable.name().equals(ins.get(1).flatMap(Either::getLeft).get()))) {
+                    String field = ins.get(1).flatMap(Either::getLeft).get();
+                    for (int i = 0; i < struct.fields().length; i++) {
+                        if (field.equals(struct.fields()[i].name())) {
+                            index = i;
+                        }
+                    }
+                    assert index != -1;
+                } else {
+                    System.out.println("arg 1 has to be a struct field");
+                    throw new RuntimeException();
+                }
+
+                String literalIndex = STR."#\{index}";
+                if (!virtualStack.contains(literalIndex)) {
+                    virtualStack.add(literalIndex);
+                }
+                instructions.add(new Set(-virtualStack.indexOf(literalIndex), index));
+
+                // TODO: type checking
+
+                if (getVarOnlyAddress(ins, 0, virtualStack).isPresent() && getVarOnlyAddress(ins, 2, virtualStack).isPresent()) {
+                    instructions.add(new ArrayOut(getVarOnlyAddress(ins, 0, virtualStack).get(), -virtualStack.indexOf(literalIndex), getVarOnlyAddress(ins, 2, virtualStack).get()));
+                } else {
+                    System.out.println("arg 2 has to be a valid var");
+                    throw new RuntimeException();
+                }
+            }
+
+            case STRUCT_ASSIGN -> {
+                Struct struct = getStruct(structs, new String[]{getVarType(ins, 0, typeMap)});
+                if (struct == null) {
+                    System.out.println("cannot use non struct for STRUCT_ACCESS");
+                    throw new RuntimeException();
+                }
+
+                int index = -1;
+                if (ins.get(1).isPresent()
+                        && ins.get(1).get().getLeft().isPresent()
+                        && Arrays.stream(struct.fields()).anyMatch(variable -> variable.name().equals(ins.get(1).flatMap(Either::getLeft).get()))) {
+                    String field = ins.get(1).flatMap(Either::getLeft).get();
+                    for (int i = 0; i < struct.fields().length; i++) {
+                        if (field.equals(struct.fields()[i].name())) {
+                            index = i;
+                        }
+                    }
+                    assert index != -1;
+                } else {
+                    System.out.println("arg 1 has to be a struct field");
+                    throw new RuntimeException();
+                }
+
+                String literalIndex = STR."#\{index}";
+                if (!virtualStack.contains(literalIndex)) {
+                    virtualStack.add(literalIndex);
+                }
+                instructions.add(new Set(-virtualStack.indexOf(literalIndex), index));
+
+
+                if (getVarOnlyAddress(ins, 0, virtualStack).isPresent()) {
+                    instructions.add(new ArrayIn(getVarOnlyAddress(ins, 0, virtualStack).get(), -virtualStack.indexOf(literalIndex), getVarAddress(ins, 2, virtualStack, instructions)));
+                } else {
+                    assert false;
+                }
+            }
         }
     }
+
+    private static Struct getStruct(Struct[] structs, String[] type) {
+        int structIndex = -1;
+        for (int i = 0; i < structs.length; i++) {
+            if (type[0].equals(structs[i].name())) {
+                structIndex = i;
+            }
+        }
+        return structIndex != -1 ? structs[structIndex] : null;
+    }
+
 
     private static String getVarType(Instruction ins, int index, HashMap<String, String[]> typeMap) {
         Optional<Either<String, Integer>> var = ins.get(index);
         if (var.isPresent() && var.get().getLeft().isPresent()) {
+            if (typeMap.get(var.get().getLeft().get()) == null) {
+                System.out.println(STR."potentially invalid var \{var.get().getLeft().get()}");
+                return "Int";
+            }
+
             return typeMap.get(var.get().getLeft().get())[0];
         } else {
             return "Int";

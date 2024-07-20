@@ -1,0 +1,78 @@
+#S_BEGIN;
+    #S_NAME BasicStruct;
+    #S_VARS_BEGIN;
+        @Array x x;
+        @Int y;
+    #S_VARS_END;
+#S_END;
+
+#F_BEGIN;
+    #F_NAME foo;
+    #F_ARGS_BEGIN;
+        @Array x struct;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #][ struct #0 #5;
+        #][ struct #1 #7;
+        #F_RETURN struct;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
+    #F_NAME create_n_array;
+    #F_ARGS_BEGIN;
+        @Int n;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @Array n Int arr;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #F_RETURN arr;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
+    #F_NAME main;
+    #F_ARGS_BEGIN;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @BasicStruct struct;
+        @Array #1 arr;
+        @Array #1 r;
+        @Int tmp;
+        @Int n;
+        @Int sum;
+        @Int i;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #= n #6;
+        #create_n_array arr n;
+        #range r #0 n;
+        #FOR i IN r;
+            #* tmp n #2;
+            #[] arr i i;
+        #ENDFOR;
+
+        #<- struct x arr;
+        #<- struct y #5;
+        #-> struct y tmp;
+
+        #print #1 #1 tmp;
+
+        #-> struct x tmp;
+
+        #print_array #1 struct;
+        #print_array #1 tmp;
+
+        #FOR i IN r;
+            #][ arr i tmp;
+            #+ sum sum tmp;
+        #ENDFOR;
+
+        #print #1 #1 sum;
+        #assert_eq #1 sum;
+        #F_RETURN sum;
+    #F_BODY_END;
+#F_END;

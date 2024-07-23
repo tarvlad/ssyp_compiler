@@ -209,11 +209,11 @@ public class Translator {
                 Optional<Integer> returnArgsAddress = getVarOnlyAddress(ins, 0, virtualStack);
 
                 // gather address of args
-                int i = returnArgsAddress.isEmpty() ? 0 : 1;
+
+                int i = 1;
                 ArrayList<Integer> varAddress = new ArrayList<>();
-                while (ins.get(i).isPresent()) {
+                for (; ins.get(i).isPresent(); i++) {
                     varAddress.add(getVarAddress(ins, i, virtualStack, instructions));
-                    i++;
                 }
 
                 // MOV instructions
@@ -231,7 +231,7 @@ public class Translator {
                         )
                 ));
 
-                // SET return
+                // Mov return
                 returnArgsAddress.ifPresent(returnAdr -> instructions.add(
                         new Mov(functionFreeSpace,
                                 returnAdr

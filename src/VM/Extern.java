@@ -11,11 +11,11 @@ public class Extern implements Instruction {
 
         // basic print
         if (runtime.getCurrentFunctionName().equals("print")) {
-            int len = -(runtime.stackAt(0) + 1);
+            int len = -(runtime.stackAt(0));
             for (int i = -1; i > len; i--) {
                 int obj = runtime.stackAt(i);
 
-                if (i != 0) {
+                if (i != -1) {
                     System.out.print(", ");
                 }
 
@@ -39,7 +39,7 @@ public class Extern implements Instruction {
         }
 
         if (runtime.getCurrentFunctionName().equals("print_string")) {
-            Integer[] charArray = runtime.getArray(runtime.stackAt(-1));
+            Integer[] charArray = runtime.getArray(runtime.stackAt(0));
             if (charArray == null) {
                 runtime.returnWith(0);
                 return;

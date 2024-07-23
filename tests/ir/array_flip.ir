@@ -5,30 +5,27 @@
     #F_ARGS_END;
     #F_VARS_BEGIN;
         @Array arr Int arr2;
+        @Array arr Int range;
+        @Array arr Int rrange;
         @Int len;
-        @Int half_len;
         @Int x;
-        @Int x_past_mid;
+        @Int xr;
         @Int tmp;
+        @Int end;
     #F_VARS_END;
     #F_BODY_BEGIN;
         #len len arr;
-        #/ half_len len #2;
-        #= x #0;
 
-        #print #4 #3 x half_len len;
+        #range rrange #0 len #-1;
+        #range range #0 len #1;
 
-        #WHILE < x half_len;
-            #- x_past_mid half_len x;
-            #IF == x_past_mid #0;
-                #BREAK;
-            #ENDIF;
-
+        #FOR x IN range;
             #][ arr x tmp;
-            #[] arr x_past_mid tmp;
-
-            #+ x x #1;
-        #ENDWHILE;
+            #][ rrange x xr;
+            #+ end len xr;
+            #+ end end #-1;
+            #[] arr2 end tmp;
+        #ENDFOR;
 
         #F_RETURN arr2;
     #F_BODY_END;
@@ -56,8 +53,6 @@
         @Int x;
     #F_VARS_END;
     #F_BODY_BEGIN;
-        #F_RETURN x;
-    
         #create_n_array arr #5;
         #[] arr #0 #1;
         #[] arr #1 #2;

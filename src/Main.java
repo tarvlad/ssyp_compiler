@@ -4,6 +4,7 @@ import Parsing.Program;
 import Parsing.Struct;
 import Translator.BytecodeFile;
 import Translator.Translator;
+import VM.VM;
 
 import java.util.List;
 
@@ -26,5 +27,7 @@ public class Main {
         Translator.translate(new Program(functions, structs), file);
 
         file.write();
+
+        VM.main(new String[]{STR."\{args[0]}.bc", "false"});
     }
 }

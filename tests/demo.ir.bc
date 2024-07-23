@@ -1,0 +1,64 @@
+fib:
+SET -6 1
+SET -7 0
+SET -3 1
+SET -1 0
+SET -2 1
+SET -5 0
+JMP 2 0 -7 9
+RETURN -1
+JMP 0 0 0 0
+JMP 2 0 -6 12
+RETURN -2
+JMP 0 0 0 19
+JMP 4 -5 0 19
+ADD -5 -5 -6
+MOV -3 -4
+ADD -3 -2 -1
+MOV -2 -1
+MOV -4 -2
+JMP 0 0 0 12
+RETURN -3
+
+main:
+SET -1 11
+MOV -1 -4
+CALL fib -3
+MOV -3 0
+RETURN 0
+
+print:
+EXTERN
+RETURN 0
+
+print_array:
+EXTERN
+RETURN 0
+
+print_string:
+EXTERN
+RETURN 0
+
+print_char:
+EXTERN
+RETURN 0
+
+len:
+EXTERN
+RETURN 0
+
+range:
+EXTERN
+RETURN 0
+
+clear_out:
+EXTERN
+RETURN 0
+
+sleep:
+EXTERN
+RETURN 0
+
+assert_eq:
+EXTERN
+RETURN 0

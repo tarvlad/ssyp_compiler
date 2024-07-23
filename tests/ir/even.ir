@@ -1,0 +1,47 @@
+#F_BEGIN;
+    #F_NAME %;
+    #F_ARGS_BEGIN;
+        @int Dividend;
+        @Int Divisor;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @Int out;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #/ out Dividend Divisor;
+        #* out out Divisor;
+        #- out Dividend out;
+        #F_RETURN out;
+    #F_BODY_END;
+#F_END;
+
+#F_BEGIN;
+    #F_NAME main;
+    #F_ARGS_BEGIN;
+    #F_ARGS_END;
+    #F_VARS_BEGIN;
+        @String str;
+        @String msg_even;
+        @String msg_odd;
+        @Int i;
+        @Int this;
+        @Int is_even;
+    #F_VARS_END;
+    #F_BODY_BEGIN;
+        #= str "happy.";
+        #= msg_even "This is even.";
+        #= msg_odd "This is odd.";
+
+        #FOR i IN str;
+            #% is_even i #2;
+
+            #IF == is_even #0;
+                #print #1 #2 i;
+                #print_string #1 msg_even;
+            #ELSE;
+                #print #1 #2 i;
+                #print_string #1 msg_odd;
+            #ENDIF;
+        #ENDFOR;
+    #F_BODY_END;
+#F_END;
